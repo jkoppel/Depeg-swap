@@ -1,0 +1,111 @@
+{
+  "title": "8.10: VaultLib – Expiry Processing & Circuit-Breaker Refresh",
+  "id": "mCQBX2xSzM26U+aBCIT2ki4UjgfE1Op3xkJwZLWpwI8=",
+  "originalId": 2748,
+  "position": 42,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "**Each epoch rollover** begins when the protocol issues a new `DepegSwap` (`DS`) token. The **vault** receives this callback and must unwind the expired liquidity, convert leftover **CT** into risk-free assets, capture accounting snapshots, and finally refresh the **NAV circuit-breaker** reference.",
+      "title": "",
+      "id": "32754"
+    },
+    {
+      "type": "highlight",
+      "description": "`onNewIssuance` is the vault’s entry point for every new DS. After ignoring the first issuance or empty vaults (lines 104-113), line 115 dispatches to `_liquidateIfExpired`; line 117 later seeds the fresh AMM with liquidity extracted from the vault’s pool.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 97,
+          "end": 118
+        }
+      ],
+      "title": "",
+      "id": "32755"
+    },
+    {
+      "type": "highlight",
+      "description": "**_liquidateIfExpired** checks whether the just-ended **DS** is expired and whether its **LP tokens** have already been processed. When both checks pass it executes a four-step pipeline: ① `_liquidatedLp`, ② `_redeemCtStrategy`, ③ `_takeRaSnapshot`, ④ `_pauseDepositIfPaIsPresent`.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 120,
+          "end": 132
+        }
+      ],
+      "title": "",
+      "id": "32756"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 1. `_liquidatedLp` burns the vault’s LP tokens. Lines 510-511 reclaim `RA` and `CT` from the `AMM`; line 508 sets a **BitMap** flag to prevent re-entry, and the recovered `CT` flows into `_redeemCtVault` for further conversion.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 493,
+          "end": 514
+        }
+      ],
+      "title": "",
+      "id": "32757"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 2. `_redeemCtStrategy` processes `CT` that the vault deliberately held during the previous epoch. It resets the `CT` balance, redeems it via the `PSM` (line 468) and credits the returned `RA` to the `AMM pool` (line 472) while funnelling any `PA` into the withdrawal pool (line 474).",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 460,
+          "end": 475
+        }
+      ],
+      "title": "",
+      "id": "32758"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 3. `_takeRaSnapshot` records the total RA now sitting inside the AMM liquidity sub-pool. This frozen value is later consulted when users redeem early from the expired epoch.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 134,
+          "end": 137
+        }
+      ],
+      "title": "",
+      "id": "32759"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 4. **_pauseDepositIfPaIsPresent** is a **safety valve**: if liquidation produced any PA liability (`line 139`), new LV deposits are automatically paused (`line 140`) until the balance is cleared.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 138,
+          "end": 142
+        }
+      ],
+      "title": "",
+      "id": "32760"
+    },
+    {
+      "type": "highlight",
+      "description": "After the rollover, `forceUpdateNavCircuitBreakerReferenceValue` recomputes a **spot NAV** (line 609) and stores it in the `NavCircuitBreaker` (line 610). This refresh ties the circuit-breaker’s thresholds to the brand-new epoch.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 603,
+          "end": 611
+        }
+      ],
+      "title": "",
+      "id": "32761"
+    },
+    {
+      "type": "textOnly",
+      "description": "The automated chain above unwinds risk, converts assets, freezes new accounting baselines, and finally updates the circuit-breaker. Together with the **pool-helper logic** explored previously, this guarantees that every **DS issuance** starts with clean, accurately-priced liquidity and that protective thresholds keep guarding deposits and withdrawals.",
+      "title": "",
+      "id": "32762"
+    }
+  ]
+}

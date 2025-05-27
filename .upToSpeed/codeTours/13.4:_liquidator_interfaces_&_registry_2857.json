@@ -1,0 +1,189 @@
+{
+  "title": "13.4: Liquidator Interfaces & Registry",
+  "id": "i+B5e0vxuAUHSDvLtXPe9q6lkc6/7NoGQKQxUejVcy0=",
+  "originalId": 2857,
+  "position": 75,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Begin with the `public interface`.  It defines the data every caller must provide and the guarantees they can rely on.",
+      "title": "",
+      "id": "34254"
+    },
+    {
+      "type": "highlight",
+      "description": "`CreateVaultOrderParams` bundles everything needed for a vault-side liquidation, including the vault’s `Id` and the off-chain-chosen `internalRefId` that links on-chain and backend bookkeeping.",
+      "file": "contracts/interfaces/ILiquidator.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 26
+        }
+      ],
+      "title": "",
+      "id": "34256"
+    },
+    {
+      "type": "highlight",
+      "description": "**hedge-unit twin**: identical fields except that `vaultId` is replaced by the `protectedUnit` address.",
+      "file": "contracts/interfaces/ILiquidator.sol",
+      "highlight": [
+        {
+          "start": 28,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "34258"
+    },
+    {
+      "type": "highlight",
+      "description": "`Call` is a thin helper (`target + data`) that child liquidators later use to perform batched or arbitrary actions.",
+      "file": "contracts/interfaces/ILiquidator.sol",
+      "highlight": [
+        {
+          "start": 42,
+          "end": 45
+        }
+      ],
+      "title": "",
+      "id": "34260"
+    },
+    {
+      "type": "highlight",
+      "description": "`OrderSubmitted` is the single event the interface mandates. Indexers can watch it to map an `internalRefId` to the freshly cloned child-liquidator and the tokens being moved.",
+      "file": "contracts/interfaces/ILiquidator.sol",
+      "highlight": [
+        {
+          "start": 47,
+          "end": 55
+        }
+      ],
+      "title": "",
+      "id": "34261"
+    },
+    {
+      "type": "highlight",
+      "description": "Seven external functions make up the public surface area.  Keep their order in mind \t6 we will visit each concrete implementation next.",
+      "file": "contracts/interfaces/ILiquidator.sol",
+      "highlight": [
+        {
+          "start": 70,
+          "end": 114
+        }
+      ],
+      "title": "",
+      "id": "34264"
+    },
+    {
+      "type": "highlight",
+      "description": "Implementation of `createOrderVault`. It clones a `VaultChildLiquidator`, stores the bookkeeping entry, moves tokens from the vault to the clone, then emits `OrderSubmitted`.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 198,
+          "end": 210
+        }
+      ],
+      "title": "",
+      "id": "34266"
+    },
+    {
+      "type": "highlight",
+      "description": "`finishVaultOrder` matches the second interface function. After the child liquidator returns funds it deletes the map entry so the reference cannot be reused.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 268,
+          "end": 275
+        }
+      ],
+      "title": "",
+      "id": "34268"
+    },
+    {
+      "type": "highlight",
+      "description": "`finishProtectedUnitOrder` is the protected-unit counterpart, calling into `ProtectedUnitChildLiquidator` instead.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 284,
+          "end": 289
+        }
+      ],
+      "title": "",
+      "id": "34269"
+    },
+    {
+      "type": "highlight",
+      "description": "`fetchVaultReceiver` and `fetchProtectedUnitReceiver` satisfy the address-helper functions. Both use `Clones.predictDeterministicAddress` so the destination can be known before deployment.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 136,
+          "end": 154
+        }
+      ],
+      "title": "",
+      "id": "34272"
+    },
+    {
+      "type": "highlight",
+      "description": "`finishProtectedUnitOrderAndExecuteTrade` extends the **finish-and-move pattern** with an inline AMM swap; the `try / catch` block makes the trade best-effort so fund recovery never reverts.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 302,
+          "end": 318
+        }
+      ],
+      "title": "",
+      "id": "34273"
+    },
+    {
+      "type": "highlight",
+      "description": "`createOrderProtectedUnit` completes the mapping, mirroring the vault flow but working with a different clone template and storing an empty `vaultId` sentinel.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 236,
+          "end": 249
+        }
+      ],
+      "title": "",
+      "id": "34276"
+    },
+    {
+      "type": "highlight",
+      "description": "`ILiquidatorRegistry` is the gatekeeper. Governance can `whitelist` or `blacklist` addresses; production code mostly calls the read-only `isLiquidationWhitelisted`.",
+      "file": "contracts/interfaces/ILiquidatorRegistry.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 10
+        }
+      ],
+      "title": "",
+      "id": "34278"
+    },
+    {
+      "type": "highlight",
+      "description": "Modules enforce the registry with `onlyWhiteListedLiquidationContract()`. Any liquidation attempt from a non-approved address reverts before funds leave the vault.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 131,
+          "end": 135
+        }
+      ],
+      "title": "",
+      "id": "34279"
+    },
+    {
+      "type": "textOnly",
+      "description": "**End-to-end flow**: a vault decides to liquidate ➜ its module calls `onlyWhiteListedLiquidationContract()` which queries the registry ➜ if the caller passes, the module invokes `ILiquidator.createOrderVault(params)` using only the interface ➜ inside `Liquidator` the concrete function clones a child-liquidator, transfers the tokens and emits `OrderSubmitted`.  The mapping from interface to implementation – and the registry gate that guards it – is now clear.",
+      "title": "",
+      "id": "34280"
+    }
+  ]
+}

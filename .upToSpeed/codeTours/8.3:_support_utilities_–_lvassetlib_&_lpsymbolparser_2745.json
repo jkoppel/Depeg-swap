@@ -1,0 +1,85 @@
+{
+  "title": "8.3: Support Utilities – LvAssetLib & LpSymbolParser",
+  "id": "e0yW8awge0CRJTmsOwooN2Lp7Vay1tYL1QBm4aDRzYE=",
+  "originalId": 2745,
+  "position": 35,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Before diving deeper into vault math, let’s meet the small helper `libraries` that keep the high-level vault code readable.",
+      "title": "",
+      "id": "32763"
+    },
+    {
+      "type": "highlight",
+      "description": "`LvAsset` is deliberately minimal: just the **ERC-20** address of the `LV token` (line 11) and an internal counter of how many tokens the vault has locked (line 12).  Everything that follows in the `library` is built around this tiny record.",
+      "file": "contracts/libraries/LvAssetLib.sol",
+      "highlight": [
+        {
+          "start": 7,
+          "end": 14
+        }
+      ],
+      "title": "",
+      "id": "32764"
+    },
+    {
+      "type": "highlight",
+      "description": "A first group of pure helpers keeps boiler-plate away from business logic:\n- `initialize` (25-26) spawns a zero-locked record.\n- `asErc20` (28-30) produces a typed `IERC20` handle so vault code never casts.\n- `isInitialized` (32-34) is the one-word zero-address check.\n- `totalIssued` (36-38) forwards `totalSupply()` so vault math never touches the **ERC-20** contract directly.",
+      "file": "contracts/libraries/LvAssetLib.sol",
+      "highlight": [
+        {
+          "start": 20,
+          "end": 38
+        }
+      ],
+      "title": "",
+      "id": "32765"
+    },
+    {
+      "type": "highlight",
+      "description": "State-changing helpers package bookkeeping with the actual token transfers:\n- `issue` (41-42) mints LV tokens via the `Asset` contract.\n- `incLocked` / `decLocked` (44-50) adjust the counter in a single call.\n- `lockFrom` & `unlockTo` (52-60) combine counter updates with ERC-20 `transferFrom` / `transfer` so higher-level code just says \"lock X from user\".",
+      "file": "contracts/libraries/LvAssetLib.sol",
+      "highlight": [
+        {
+          "start": 40,
+          "end": 64
+        }
+      ],
+      "title": "",
+      "id": "32766"
+    },
+    {
+      "type": "highlight",
+      "description": "`LpParser.parse` extracts the underlying pair from an AMM LP token symbol:\n- Expects the format `LP-<RA>-<CT>` (comment 8-10).\n- A few bytes of inline assembly (15-24) slice the two ASCII-hex addresses.\n- `Strings.parseAddress` (26-27) turns them into real `address` values, so vault code can call `parse(symbol)` and immediately know which tokens back the LP.",
+      "file": "contracts/libraries/LpSymbolParser.sol",
+      "highlight": [
+        {
+          "start": 6,
+          "end": 28
+        }
+      ],
+      "title": "",
+      "id": "32767"
+    },
+    {
+      "type": "highlight",
+      "description": "At the very top of `VaultLib` these helpers are pulled in alongside other domain-specific libraries.  Thanks to those imports later functions read like high-level instructions – `self.vault.lv.issue(...)`, `lvAsset.lockFrom(...)` – instead of raw token bookkeeping.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 13
+        }
+      ],
+      "title": "",
+      "id": "32768"
+    },
+    {
+      "type": "textOnly",
+      "description": "These compact helpers do not implement vault policies; they hide the repetitive parts so the big vault functions can stay focused on strategy and edge-cases.",
+      "title": "",
+      "id": "32769"
+    }
+  ]
+}

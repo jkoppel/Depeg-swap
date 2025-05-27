@@ -1,0 +1,176 @@
+{
+  "title": "7.3: PSM Interfaces: Public Contract Surface",
+  "id": "S6W4MDVtZAqK1evjiOURNgjZ3C16Q1wVfgqGpTr/KgY=",
+  "originalId": 2736,
+  "position": 27,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Three interfaces shape the public surface other contracts lean on: `IPSMcore` (the **PSM** itself), its repurchase add-on, and the tiny reserve oracle every `CT` / `DS` / `LV` token implements.",
+      "title": "",
+      "id": "32602"
+    },
+    {
+      "type": "highlight",
+      "description": "The very first lines expose an important fact: `IPSMcore` extends `IRepurchase`, so every **repurchase endpoint** lives in that separate interface.",
+      "file": "contracts/interfaces/IPSMcore.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 13
+        }
+      ],
+      "title": "",
+      "id": "32603"
+    },
+    {
+      "type": "highlight",
+      "description": "Lines 13-142 are a wall of events. Each one documents a user-visible milestone — **rate changes**, **deposits**, **rollovers**, **redemptions** and **admin toggles** — giving downstream analytics exhaustive hooks.",
+      "file": "contracts/interfaces/IPSMcore.sol",
+      "highlight": [
+        {
+          "start": 13,
+          "end": 142
+        }
+      ],
+      "title": "",
+      "id": "32604"
+    },
+    {
+      "type": "highlight",
+      "description": "Deposit — `depositPsm` mints CT + DS for a redemption asset deposit and returns the amount received alongside the effective exchange rate.",
+      "file": "contracts/interfaces/IPSMcore.sol",
+      "highlight": [
+        {
+          "start": 145,
+          "end": 151
+        }
+      ],
+      "title": "",
+      "id": "32605"
+    },
+    {
+      "type": "highlight",
+      "description": "**Exchange-Rate** — `exchangeRate` is the single read-only price oracle for CT/DS inside a `PSM`.",
+      "file": "contracts/interfaces/IPSMcore.sol",
+      "highlight": [
+        {
+          "start": 152,
+          "end": 159
+        }
+      ],
+      "title": "",
+      "id": "32606"
+    },
+    {
+      "type": "highlight",
+      "description": "**Redemption (early)** — two overloads of `redeemRaWithDsPa` let users burn PA+DS for RA before maturity, returning received RA, the live rate and fees.",
+      "file": "contracts/interfaces/IPSMcore.sol",
+      "highlight": [
+        {
+          "start": 169,
+          "end": 190
+        }
+      ],
+      "title": "",
+      "id": "32607"
+    },
+    {
+      "type": "highlight",
+      "description": "**Redemption (at expiry)** — `redeemWithExpiredCt` handles mature CT, paying out both RA and any remaining PA entitlement.",
+      "file": "contracts/interfaces/IPSMcore.sol",
+      "highlight": [
+        {
+          "start": 199,
+          "end": 216
+        }
+      ],
+      "title": "",
+      "id": "32608"
+    },
+    {
+      "type": "highlight",
+      "description": "**Redemption helpers** — `returnRaWithCtDs` is a pure preview version of the **CT+DS** path so UIs can quote without state changes.",
+      "file": "contracts/interfaces/IPSMcore.sol",
+      "highlight": [
+        {
+          "start": 219,
+          "end": 237
+        }
+      ],
+      "title": "",
+      "id": "32609"
+    },
+    {
+      "type": "highlight",
+      "description": "**Rollover** — these methods move an expired `CT` into the next epoch, let holders opt-in for `DS` auto-sell and claim any resulting profit.",
+      "file": "contracts/interfaces/IPSMcore.sol",
+      "highlight": [
+        {
+          "start": 263,
+          "end": 285
+        }
+      ],
+      "title": "",
+      "id": "32610"
+    },
+    {
+      "type": "highlight",
+      "description": "Misc — `valueLocked`, `baseRedemptionFee`, and `psmAcceptFlashSwapProfit` round out the interface with accounting and admin hooks.",
+      "file": "contracts/interfaces/IPSMcore.sol",
+      "highlight": [
+        {
+          "start": 248,
+          "end": 262
+        }
+      ],
+      "title": "",
+      "id": "32611"
+    },
+    {
+      "type": "highlight",
+      "description": "**Repurchase event** — `Repurchased` captures every parameter an external dashboard needs: amounts, fees, and the effective DS rate.",
+      "file": "contracts/interfaces/IRepurchase.sol",
+      "highlight": [
+        {
+          "start": 25,
+          "end": 35
+        }
+      ],
+      "title": "",
+      "id": "32612"
+    },
+    {
+      "type": "highlight",
+      "description": "**Repurchase API** — `repurchase` executes a buy-back with RA; `repurchaseFee`, `availableForRepurchase`, and `repurchaseRates` are the supporting views.",
+      "file": "contracts/interfaces/IRepurchase.sol",
+      "highlight": [
+        {
+          "start": 46,
+          "end": 85
+        }
+      ],
+      "title": "",
+      "id": "32613"
+    },
+    {
+      "type": "highlight",
+      "description": "Reserve oracle — any **CT**, **DS** or **LV** token implements `getReserves()` so off-chain clients can query its RA / PA backing in a single call.",
+      "file": "contracts/interfaces/IReserve.sol",
+      "highlight": [
+        {
+          "start": 3,
+          "end": 11
+        }
+      ],
+      "title": "",
+      "id": "32614"
+    },
+    {
+      "type": "textOnly",
+      "description": "Taken together these three interfaces expose every deposit, price, redemption, rollover, repurchase and reserve hook other protocols rely on — **nothing more, nothing less.**",
+      "title": "",
+      "id": "32615"
+    }
+  ]
+}

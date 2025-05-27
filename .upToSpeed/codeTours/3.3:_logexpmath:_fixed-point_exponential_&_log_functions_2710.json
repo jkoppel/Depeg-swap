@@ -1,0 +1,189 @@
+{
+  "title": "3.3: LogExpMath: Fixed-Point Exponential & Log Functions",
+  "id": "Apz5gmrISHuC6DNOK1F9i2sBCzi8p9VIwx1pPE9mA08=",
+  "originalId": 2710,
+  "position": 8,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "We are about to tour the `Balancer LogExpMath` library—the low-level engine for exponentials, logarithms and powers.  All numbers are `18`-decimal fixed-point integers, so `1e18` represents `1.0`.",
+      "title": "",
+      "id": "32291"
+    },
+    {
+      "type": "highlight",
+      "description": "The header credits the original `Balancer` authors (lines 25-28).  The comments confirm every argument and result is **18-decimal fixed point**.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 19,
+          "end": 28
+        }
+      ],
+      "title": "",
+      "id": "32292"
+    },
+    {
+      "type": "highlight",
+      "description": "`ONE_18` is the fixed-point unit. The code sometimes upgrades to `ONE_20` or `ONE_36` for extra precision, then scales back down.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 33,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "32293"
+    },
+    {
+      "type": "highlight",
+      "description": "`MAX_NATURAL_EXPONENT` ≈ +130 and `MIN_NATURAL_EXPONENT` ≈ −41 fence the domain of `exp()` so intermediate 20-dec calculations never overflow `int256`.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 41,
+          "end": 50
+        }
+      ],
+      "title": "",
+      "id": "32294"
+    },
+    {
+      "type": "highlight",
+      "description": "`exp()` starts by enforcing those bounds (line 93) and flips negative inputs via `e^{-x}=1/e^{x}` (lines 95-100).  The core algorithm can therefore assume `x\\geq0`. ",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 90,
+          "end": 100
+        }
+      ],
+      "title": "",
+      "id": "32295"
+    },
+    {
+      "type": "highlight",
+      "description": "The first decomposition step peels off either 2⁷ or 2⁶, multiplying the matching pre-computed constant `a0` or `a1` into the result.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 120,
+          "end": 128
+        }
+      ],
+      "title": "",
+      "id": "32296"
+    },
+    {
+      "type": "highlight",
+      "description": "With x now in 20-dec form (line 132), the loop walks down powers of two.  Each time x≥xₙ the corresponding e^{xₙ} (`aₙ`) is folded into `product`, dividing by `ONE_20` to keep scale.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 138,
+          "end": 166
+        }
+      ],
+      "title": "",
+      "id": "32297"
+    },
+    {
+      "type": "highlight",
+      "description": "Once `x` is smaller than the last power, a `12`-term Taylor series approximates `eˣ`. Each term reuses the previous one: multiply by `x`, divide by `n`—cheap yet accurate to 18 decimals.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 173,
+          "end": 199
+        }
+      ],
+      "title": "",
+      "id": "32298"
+    },
+    {
+      "type": "highlight",
+      "description": "Finally, `(product × seriesSum × firstAN)` is combined, divided by `ONE_20` and then `/100` to undo the earlier ×100, producing an 18-decimal answer.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 221,
+          "end": 227
+        }
+      ],
+      "title": "",
+      "id": "32299"
+    },
+    {
+      "type": "highlight",
+      "description": "`ln()` rejects non-positive inputs. For arguments within ±10 % of 1 it delegates to the high-precision `_ln_36`; everything else falls through to `_ln`.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 236,
+          "end": 241
+        }
+      ],
+      "title": "",
+      "id": "32300"
+    },
+    {
+      "type": "highlight",
+      "description": "`_ln` handles values <1 recursively: **ln(a) = -ln(1/a)**. After this flip the rest of the logic only deals with numbers ≥1.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 304,
+          "end": 309
+        }
+      ],
+      "title": "",
+      "id": "32301"
+    },
+    {
+      "type": "highlight",
+      "description": "After dividing out the pre-computed factors, the remainder lies close to 1.  A rapidly converging series in `z=(a−1)/(a+1)` adds just six terms for full 18-dec accuracy.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 395,
+          "end": 424
+        }
+      ],
+      "title": "",
+      "id": "32302"
+    },
+    {
+      "type": "highlight",
+      "description": "`pow(x, y)` leans on the identity xʸ = exp(y × ln x).  It also special-cases 0⁰→1 and 0ʸ→0.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 245,
+          "end": 264
+        }
+      ],
+      "title": "",
+      "id": "32303"
+    },
+    {
+      "type": "highlight",
+      "description": "Before calling `exp`, the product y × `ln x` must lie inside our safe exponent window (lines 291-293). That single guard prevents overflow in the final step.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 271,
+          "end": 295
+        }
+      ],
+      "title": "",
+      "id": "32304"
+    },
+    {
+      "type": "textOnly",
+      "description": "Every price curve, interest-rate formula or swap-math routine in the protocol calls `exp`, `ln`, or `pow`.  Trusting their rigorously bounded, high-precision implementations means you can trust the higher-level calculations built on top.",
+      "title": "",
+      "id": "32305"
+    }
+  ]
+}

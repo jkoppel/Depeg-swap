@@ -1,0 +1,333 @@
+[
+  {
+    "terms": [
+      "Liquidity Provider"
+    ],
+    "definition": "# Liquidity Provider\n\nA participant who deposits pairs of assets (typically RA/CT tokens) into Depeg Swap liquidity pools, enabling trading functionality and depeg protection mechanisms. Liquidity providers execute this process through functions like `__provideLiquidity`, which calculates optimal asset ratios based on current market conditions. In return, they receive LP tokens representing their proportional share of the pool, which can be redeemed later to withdraw their assets plus accrued trading fees. The system utilizes these deposited assets to facilitate swaps, maintain price stability, and importantly, to back depeg protection instruments. Liquidity providers face standard DeFi risks like impermanent loss, particularly during significant price movements or depegging events."
+  },
+  {
+    "terms": [
+      "Volatility"
+    ],
+    "definition": "# Volatility\n\nIn the context of this DeFi swap protocol, volatility refers to price fluctuations of assets that create risk requiring management through various mechanisms. The codebase implements several volatility mitigation strategies, including:\n\n1. **Dynamic Sell Pressure Calculation**: The system calculates optimal sell pressure percentages based on risk premiums and thresholds (`calculateOptimalSellPressureWithRiskPremium`), allowing the protocol to adapt to changing market conditions.\n\n2. **Decay Discount Rate**: The `decayDiscountRateInDays` parameter helps smooth price impacts over time, reducing the effects of short-term volatility spikes.\n\n3. **HIYA/VHIYA Accumulation**: These values (`hiyaCumulated` and `vhiyaCumulated` in `ReserveState`) track historical price relationships, allowing the protocol to make more informed decisions based on past volatility patterns.\n\n4. **Rollover Mechanisms**: Time-based parameters like `rolloverEndInBlockNumber` help manage transitions between market states, providing stability during periods of potential volatility.\n\nThe system's mathematical models (like those in `SwapperMathLibrary`) are designed to calculate optimal trading parameters that account for volatility without explicitly naming it, focusing instead on its effects and mitigation."
+  },
+  {
+    "terms": [
+      "Arbitrage"
+    ],
+    "definition": "# Arbitrage\n\nIn Depeg Swap V1, arbitrage refers to the profit-seeking trading activity that stabilizes token prices and restores pegs. The protocol explicitly calculates an Arbitrage Profit Rate (ARP) to quantify potential returns from price discrepancies between assets. This mechanism is core to the system's design, with functions like `calcSpotArp` measuring profit opportunities and parameters like `initialARP` configuring markets.\n\nThe codebase implements multiple arbitrage paths including swapping between redemption assets (RA) and depeg swap tokens (DS) via `swapDsforRa` and `swapRaforDs`, as well as automatic processes like rollover and auto-selling of expired tokens. These mechanisms ensure continuous liquidity across time periods and maintain price stability through profit-motivated trading. By allowing traders to capitalize on temporary price imbalances, the protocol self-regulates toward equilibrium prices while providing yield opportunities for liquidity providers."
+  },
+  {
+    "terms": [
+      "Slippage"
+    ],
+    "definition": "# Slippage\n\nSlippage refers to the difference between the expected price of a token swap and the actual execution price when the transaction is processed on the blockchain. This discrepancy occurs because blockchain transactions aren't instantaneous - market conditions can change between when a user initiates a transaction and when it's finally executed.\n\nIn this codebase, slippage protection is implemented through user-specified minimum output amounts (`amountOutMin` parameters). When a user performs operations like `swapRaForDs` or `redeemEarlyLv`, they specify the minimum acceptable tokens they're willing to receive. If market conditions change unfavorably during transaction processing and the actual output would be less than this minimum, the transaction reverts with errors like `InsufficientOutputAmountForSwap`.\n\nFor example, in `FlashSwapRouter.sol`:\n```solidity\n// slippage protection, revert if the amount of DS tokens received is less than the minimum amount\nif (result.amountOut < amountOutMin) {\n    revert InsufficientOutputAmountForSwap();\n}\n```\n\nSlippage protection is critical in decentralized finance to protect users from receiving significantly worse rates than expected, especially in volatile markets or for large orders that might substantially impact liquidity pools."
+  },
+  {
+    "terms": [
+      "Spread"
+    ],
+    "definition": "# Spread\n\nIn decentralized exchanges and stablecoin protocols, \"Spread\" refers to the technique of distributing large trading orders over time rather than executing them as single transactions. By spreading trades across multiple blocks or time intervals, the protocol minimizes market impact, reduces price slippage, and maintains overall market stability. This is particularly important in systems that need to maintain price pegs or handle significant trading volumes. \n\nIn the Depeg Swap codebase, this concept is implemented through mechanisms like rollover periods (seen in `getRolloverEndInBlockNumber`), expiry management, and staged asset issuance, which collectively ensure that large market actions don't cause sudden price fluctuations or destabilize currency pegs."
+  },
+  {
+    "terms": [
+      "Order Book"
+    ],
+    "definition": "# Order Book\n\nIn the Depeg Swap V1 protocol, an Order Book is a system for managing and tracking trading orders during liquidation processes. Unlike traditional exchange order books that match buyers and sellers, this implementation serves as a bridge between the protocol's internal accounting and external order execution via COW Protocol.\n\nThe Order Book functionality centers around the `Orders` struct:\n\n```solidity\nstruct Orders {\n    Details details;       // Information about tokens and amounts\n    address liquidator;    // Address managing the liquidation\n    Id vaultId;            // Identifier for vault (if applicable)\n    address receiver;      // Destination for order proceeds\n}\n```\n\nThe system supports two primary order types:\n1. **Vault Orders** - For liquidating vault positions through `createOrderVault`\n2. **Protected Unit Orders** - For handling protected unit liquidations via `createOrderProtectedUnit`\n\nOrders go through a lifecycle of creation, execution (via COW Protocol), and settlement. The settlement process handles both complete and partial fills, returning any unused funds to their source. The system tracks order status using unique reference IDs and emits events for off-chain monitoring.\n\nThis implementation provides a specialized mechanism for coordinating liquidations and asset exchanges rather than implementing a traditional on-chain limit order book."
+  },
+  {
+    "terms": [
+      "Market Depth"
+    ],
+    "definition": "# Market Depth\n\nMarket depth in Depeg Swap V1 refers to the total liquidity available at various price levels in a particular market pair. It represents the capacity of the market to absorb buy or sell orders without causing significant price slippage. In the codebase, market depth is primarily built through liquidity deposits via functions like `depositLv()`, which add redemption assets to liquidity vaults.\n\nThe market structure, defined by the `Market` struct, contains parameters that directly influence depth:\n- Pegged and redemption assets defining the trading pair\n- Exchange rates determining price relationships\n- Fee parameters affecting trading behavior\n\nHigher market depth provides several benefits:\n- Reduced slippage for larger trades\n- Greater price stability for the asset pair\n- More efficient price discovery\n- Lower risk for traders and liquidity providers\n\nMarket depth can be observed through reserve balances (as seen in `getReserves()`) and impacts the relationship between tokens like DS (depeg swap tokens) and CT (collateral tokens) within the protocol."
+  },
+  {
+    "terms": [
+      "Limit Order"
+    ],
+    "definition": "# Limit Order\n\nIn decentralized finance (DeFi) protocols like the one in this codebase, a Limit Order is a transaction instruction that executes token swaps only when specific price conditions are met. Unlike market orders which execute immediately at current prices, limit orders remain pending until their specified price targets are reached.\n\nThe implementation here shows limit orders being created through functions like `createOrderProtectedUnit` and `createOrderVault`, with details specifying the sell token, amount, and desired buy token. These orders are:\n\n1. Created by authorized liquidators who specify the intended trade parameters\n2. Recorded on-chain as pending transactions\n3. Monitored by off-chain systems (evidenced by `emit OrderSubmitted` events)\n4. Only executed when market conditions satisfy the order requirements\n5. Capable of partial fills if only a portion of the order can be executed at the desired price\n\nIn the context of liquidations, these limit orders provide a mechanism to optimize asset sales during market stress, ensuring the protocol can obtain the best possible rates when exchanging distressed assets."
+  },
+  {
+    "terms": [
+      "Stop-Loss Order"
+    ],
+    "definition": "# Stop-Loss Order\n\nIn decentralized exchanges like Depeg Swap V1, a Stop-Loss Order is an automated risk management mechanism that executes a trade when an asset's price reaches a predetermined threshold. Unlike traditional stop-losses, these orders are implemented on-chain through smart contract functionality.\n\nThe implementation typically involves:\n\n1. **Order Parameters**: Users define selling/buying tokens, amounts, and minimum acceptable output (slippage protection).\n\n2. **Liquidation Triggers**: Smart contracts monitor price conditions and automatically execute the order when thresholds are crossed.\n\n3. **Protected Execution**: Orders include safeguards like `amountOutMin` parameters to prevent executing at unexpectedly unfavorable prices.\n\nIn the codebase, this functionality is implemented through liquidator contracts that can create and execute orders on behalf of users, with methods like `createOrderVault`, `finishVaultOrder`, and `finishProtectedUnitOrderAndExecuteTrade`.\n\nStop-Loss Orders enhance risk management in DeFi by enabling users to limit potential losses without requiring constant market monitoring, while maintaining the security benefits of on-chain execution."
+  },
+  {
+    "terms": [
+      "Maker Fee"
+    ],
+    "definition": "# Maker Fee\n\nIn the context of Depeg Swap's decentralized exchange (DEX), a \"Maker Fee\" refers to the base percentage fee charged to users who provide liquidity to the exchange's trading pools. Unlike traditional exchanges that distinguish between maker and taker fees, Depeg Swap implements an \"AMM Base Fee\" system that applies to all trades executed through its Automated Market Maker.\n\nThis fee is configurable per trading pair through the `updateAmmBaseFeePercentage` function and can be set by governance or management. For example, in the deployment scripts, different trading pairs have different AMM Base Fee percentages:\n\n```solidity\n// From SetupMarkets.s.sol\nconfigureFees(\n    wstETH,\n    weth,\n    weth_wstETH_ARP,\n    weth_wstETH_Expiry,\n    weth_wstETH_RedemptionFee,\n    weth_wstETH_RepurchaseFee,\n    weth_wstETH_AmmBaseFee,  // The maker fee percentage\n    weth_wstETH_FeesSplit\n);\n```\n\nAdditionally, the system implements a fee-splitting mechanism through `updateAmmTreasurySplitPercentage`, which determines how the collected fees are distributed between liquidity providers and the protocol treasury."
+  },
+  {
+    "terms": [
+      "Taker Fee"
+    ],
+    "definition": "# Taker Fee\n\nA fee charged by certain decentralized exchanges when users execute transactions that \"take\" liquidity from the market. In the Depeg Swaps protocol, these fees appear as various percentage-based charges like `ammBaseFeePercentage`, redemption fees, repurchase fees, and DS extra fees. The protocol deducts these fees from swap amounts and splits them between the treasury and other entities according to configurable ratios (using functions like `updateAmmTreasurySplitPercentage`). Taker fees serve multiple purposes: generating protocol revenue, creating economic incentives, and helping manage the dynamics of stablecoin pegging mechanisms."
+  },
+  {
+    "terms": [
+      "Margin Trading"
+    ],
+    "definition": "# Margin Trading\n\nMargin trading in DeFi refers to a trading strategy where users borrow assets to increase their position size beyond what their capital would normally allow. Looking at the Depeg Swap protocol code, while not explicitly implementing traditional margin trading, it demonstrates a related risk-management system where users can take positions on stablecoin depeg events through various token mechanisms.\n\nThe protocol uses specialized tokens (LV, DS, CT) and trading functions (`depositLv()`, `redeemLv()`, `swapRaForDs()`) to create markets around stablecoin pair risks. Users can deposit assets, create positions, and potentially amplify returns by providing liquidity to these specialized trading pairs, similar to how traditional margin positions amplify exposure to price movements.\n\nUnlike centralized margin trading where a broker provides loans, DeFi margin trading typically uses smart contracts and liquidity pools to facilitate the lending and trading operations, with positions secured by the user's collateral in the protocol."
+  },
+  {
+    "terms": [
+      "Leverage"
+    ],
+    "definition": "# Leverage\n\nIn the context of the Depeg Swap protocol, \"Leverage\" (abbreviated as \"Lv\" throughout the codebase) refers to a specific type of protocol asset or module that extends the core functionality of the system. Unlike traditional financial leverage that involves borrowed capital, Lv assets in this protocol represent specialized tokens that users can deposit, redeem, and interact with through dedicated functions like `depositLv()` and `redeemLv()`.\n\nThe Lv system allows the protocol to be extended with custom logic through deployable assets (`deployLv()`) that are tied to specific market pairs. Each Lv asset has its own market ID, reserves, and parameters, enabling the protocol to support various specialized trading mechanisms without modifying the core contracts.\n\nThis architectural leverage enables the Depeg Swap protocol to remain flexible and upgradable while supporting complex trading products and market-specific behaviors through its modular design."
+  },
+  {
+    "terms": [
+      "Hedging"
+    ],
+    "definition": "# Hedging\n\nHedging in decentralized exchanges refers to strategies and mechanisms designed to mitigate financial risks, particularly around stablecoin depegs and adverse price movements. In this codebase, hedging is implemented through Protected Units and structured products that enable users to offset exposure to price fluctuations between paired assets.\n\nThe system creates specialized financial instruments with properties like:\n\n- **Fixed expiry dates**: Assets have predetermined end dates when positions are settled\n- **Mint caps**: Limiting exposure through maximum issuance limits\n- **Automated rollovers**: Enabling position extension when expiry approaches\n- **Reference rate providers**: External price feeds determining settlement rates\n\nThese mechanisms allow liquidity providers to manage impermanent loss and users to protect against depegging events through structured products like Depeg Swaps, which enable trading a potentially depegged asset for a reference asset at predetermined rates.\n\nRather than merely accepting market volatility, the protocol creates programmable hedging strategies executed through smart contracts that balance risk exposure while still capturing trading fees and premiums from market participants seeking protection."
+  },
+  {
+    "terms": [
+      "Swap"
+    ],
+    "definition": "# Swap\n\nIn the context of Depeg Swap, a \"Swap\" is a specialized exchange operation designed to handle cryptocurrency depeg events - situations where pegged assets (like stablecoins) deviate from their intended value. \n\nThe protocol defines this through a `SwapPair` structure that links two essential assets:\n```solidity\nstruct SwapPair {\n    address ct;  // Cover Token - provides protection against depeg events\n    address ds;  // Depeg Swap - represents the swap contract itself\n}\n```\n\nSwaps are executed through specialized functions like `swap` that handle token exchanges between Redemption Assets (RA) and Cover Tokens (CT):\n\n```solidity\ncorkHook.swap(market.redemptionAsset, ct, amountOut, 0, bytes(\"\"));\n```\n\nUnlike traditional DEX swaps that use constant product formulas, Depeg Swaps are specifically engineered for trading against smart contracts during market disruptions, allowing users to efficiently manage risk when pegged assets lose their value relationship. The system uses precise calculations for amounts in/out to ensure fair exchange rates while maintaining protocol solvency."
+  },
+  {
+    "terms": [
+      "Futures"
+    ],
+    "definition": "# Futures\n\nIn the context of Depeg Swap V1, \"Futures\" are tokenized risk contracts with predetermined expiration dates. These financial instruments allow users to hedge against or speculate on stablecoin depeg events over specific time periods.\n\nFutures in this protocol are implemented through a sophisticated expiry mechanism where contracts have a defined lifetime and settlement process. When a contract reaches its expiration date (`Asset(ds).expiry()`), it triggers settlement procedures and may initiate a rollover period.\n\nKey characteristics of these futures contracts include:\n\n1. **Time-bound nature** - Each contract has a specific expiration timestamp\n2. **Rollover functionality** - Ability to transition positions to new contract periods after expiry\n3. **Settlement process** - Systematic handling of contract resolution at expiration\n4. **Liquidation mechanisms** - Procedures for accessing liquidation funds after expiry\n\nThese futures are designed as part of a broader system for pricing, hedging, and trading depeg risk in decentralized finance, providing users with tools to manage exposure to stablecoin volatility events with predictable time horizons."
+  },
+  {
+    "terms": [
+      "Options"
+    ],
+    "definition": "# Options\n\nIn the context of Depeg Swap V1, \"Options\" refer to configurable parameters passed to functions when interacting with the protocol's smart contracts. These options allow users and developers to customize various aspects of swap operations and asset issuance.\n\nOptions are typically implemented as JavaScript objects with named properties that can override default settings. For example, when creating new swap assets, options can specify contract addresses, expiry times, and other parameters:\n\n```typescript\nasync function issueNewSwapAssets(expiry: any, options = {}) {\n  return await helper.issueNewSwapAssets({\n    expiry: expiry,\n    moduleCore: moduleCore.address,\n    config: fixture.config.contract.address,\n    pa: fixture.pa.address,\n    ra: fixture.ra.address,\n    factory: fixture.factory.contract.address,\n    ...options, // Custom options override defaults\n  });\n}\n```\n\nThis flexible options pattern enables precise control over swap parameters, allowing users to tailor their hedging strategies against stablecoin depeg events to their specific risk preferences and market conditions."
+  },
+  {
+    "terms": [
+      "Derivatives"
+    ],
+    "definition": "# Derivatives\n\nIn the context of Depeg Swap and similar DeFi protocols, derivatives are tokenized financial instruments whose value and behavior are derived from underlying assets. In this codebase, the system creates derivative tokens (labeled as \"ds\" in the code) that give holders specific rights, particularly the right to exchange a pegged asset (like a stablecoin) for another asset before a predetermined expiration date.\n\nThe implementation shows several key derivative characteristics:\n\n1. **Time-bound contracts**: The code contains multiple `ff_expired()` functions that simulate time warping to test expiration behavior, showing derivatives have defined lifetimes.\n\n2. **Derived value**: Derivatives' value comes from underlying assets, with exchange rates and reserves determining payouts.\n\n3. **Expiry mechanics**: When derivatives expire (as shown in `testResolution()` and other functions), specific resolution processes are triggered.\n\n4. **Issuance parameters**: The `issueNewDs()` function demonstrates how new derivative contracts are created with configurable parameters like decay rates, rollover periods, and liquidation deadlines.\n\nThese derivatives serve as financial instruments that allow users to hedge against or speculate on risks associated with pegged assets, particularly the risk of a stablecoin losing its peg to its reference asset."
+  },
+  {
+    "terms": [
+      "Stablecoin"
+    ],
+    "definition": "# Stablecoin\n\nA cryptocurrency designed to maintain a stable value relative to a reference asset (typically the US dollar), used extensively in decentralized finance systems. In the Depeg Swap V1 context, stablecoins are actively managed tokens within a framework that protects against \"depegging\" events - when a stablecoin deviates from its intended peg. The codebase implements Protected Units for stablecoin pairs (like svbUSD-fedUSD), maintains exchange rates through Price Stability Modules, and provides mechanisms for deposit/withdrawal with predetermined fees and mint caps. Stablecoin interactions are standardized through 18-decimal conversions, with market structures defining expiry dates and rate parameters to mitigate the risks of value fluctuation during extreme market conditions."
+  },
+  {
+    "terms": [
+      "Collateral"
+    ],
+    "definition": "# Collateral\n\nIn the context of the Depeg Swap V1 protocol, collateral refers to assets that users provide to secure their positions or transactions within the system. These assets serve as a form of security that protects both the protocol and other users against potential losses. \n\nThe protocol appears to handle two primary types of assets that function within its collateralization system:\n- **CT (Collateral Token)**: The asset provided as security\n- **DS (Depeg Swap token)**: The asset being traded or managed\n\nCollateral plays several critical roles in the system:\n\n1. **Position Security**: When users take positions in the protocol, they must provide collateral to ensure they can meet their obligations.\n\n2. **Liquidation Mechanism**: If market conditions change unfavorably, the collateral enables automatic liquidation processes that protect the protocol from insolvency.\n\n3. **Flash Swap Operations**: As seen in the `FlashSwapRouter.sol` contract, collateral facilitates flash swap transactions where assets are borrowed and returned within a single transaction.\n\nThe relationship between collateral tokens and their associated assets is managed through the protocol's core module, as evidenced by the recurring pattern in the test files:\n\n```solidity\n(ct, ds) = moduleCore.swapAsset(currencyId, dsId);\n```\n\nThis collateralization system is fundamental to the protocol's ability to maintain stability and provide security when dealing with potentially depegged assets in decentralized finance operations."
+  },
+  {
+    "terms": [
+      "Yield Farming"
+    ],
+    "definition": "# Yield Farming\n\nYield farming in decentralized finance refers to the process of providing liquidity to specific pools and staking assets to earn additional rewards beyond standard trading fees. In the Depeg Swap V1 protocol, users can deposit tokens into liquidity vaults (LV) using functions like `depositLv()`, which allows them to earn from various fee streams generated by the protocol.\n\nThe yield farming mechanism uses several token types: Redemption Assets (RA), Pegged Assets (PA), Liquidity Vault tokens (LV), Depeg Swap tokens (DS), and Contingent Tokens (CT). These interact within configured markets with specific parameters for exchange rates and fee structures.\n\nRevenue for yield farmers comes from multiple sources:\n- Fee sharing from trading activities\n- Strategic positioning in liquidity pools\n- Participation in the protocol's risk management system\n\nThe protocol includes sophisticated parameters that affect yield distribution, such as the `updateAmmTreasurySplitPercentage` function which determines how fees are split between treasury and liquidity providers, and `updateLvStrategyCtSplitPercentage` which affects how contingent token rewards are allocated.\n\nYield farmers can redeem their positions using functions like `redeemLv()` to collect accumulated rewards, with performance typically measured through metrics like farm efficiency, staked balance, and offered farm yield."
+  },
+  {
+    "terms": [
+      "Staking"
+    ],
+    "definition": "# Staking\n\nIn Depeg Swap, staking refers to the process of depositing and locking liquidity provider (LP) tokens into a dedicated smart contract to earn additional reward tokens. Users primarily stake by calling the `depositLv` function, supplying redemption assets to liquidity vaults which help maintain price stability between token pairs, especially for stablecoins that might depeg from their target value. \n\nThe protocol tracks staked positions through the issuance of LV (Liquidity Vault) tokens that represent ownership of the deposited assets plus any accrued rewards. Stakers can redeem their assets by calling functions like `redeemEarlyLv`, subject to the protocol's withdrawal policies which can be paused during market volatility.\n\nThe staking mechanism serves multiple purposes: providing market liquidity, generating fee revenue for participants, and creating risk-absorption pools that help stablecoins maintain their pegs. The system includes safety controls allowing protocol administrators to pause deposits or withdrawals as needed to protect users during exceptional market conditions."
+  },
+  {
+    "terms": [
+      "APR (Annual Percentage Rate)",
+      "APR",
+      "Annual Percentage Rate"
+    ],
+    "definition": "# APR (Annual Percentage Rate)\n\nIn the context of Depeg Swap V1, APR (Annual Percentage Rate) serves as a fundamental parameter that influences pricing mechanisms and risk assessment within the protocol. Unlike traditional finance where APR indicates interest returns, here it functions as a key variable that determines the pricing ratio between different tokens in a depeg swap system.\n\nThe APR parameter affects calculations like the initial CT (Collateral Token) ratio:\n\n```solidity\n// contracts/libraries/VaultLib.sol\nfunction initialize(VaultState storage self, address lv, address ra, uint256 initialArp) external {\n    self.lv = LvAssetLibrary.initialize(lv);\n    self.balances.ra = RedemptionAssetManagerLibrary.initialize(ra);\n}\n```\n\nIt's used in mathematical functions that determine spot rates and pricing constants:\n\n```solidity\n// contracts/libraries/DsSwapperMathLib.sol\nfunction calcSpotArp(UD60x18 t, UD60x18 effectiveDsPrice) internal pure returns (UD60x18) {\n    UD60x18 pt = calcPt(effectiveDsPrice);\n    return calcRt(pt, t);\n}\n```\n\nAPR in this system appears to serve as a control mechanism related to the management of depeg risk, affecting how the protocol prices assets in relation to each other, particularly in scenarios where stablecoins might deviate from their pegs."
+  },
+  {
+    "terms": [
+      "APY (Annual Percentage Yield)",
+      "APY",
+      "Annual Percentage Yield"
+    ],
+    "definition": "# APY (Annual Percentage Yield)\n\nAnnual Percentage Yield (APY) in the context of Depeg Swap V1 represents the annualized rate of return that liquidity providers earn by contributing assets to the protocol's pools. Unlike simple interest calculations, APY accounts for compounding effects over time.\n\nThe codebase implements APY through several mathematical components:\n\n- The `calcSpotArp()` function calculates spot Annual Rate of Profit based on time parameters and pricing data\n- `calculateInitialCtRatio()` uses APY input to determine initial price ratios between tokens\n- Various HIYA (Historical Implied Yield Accumulation) calculations track yield accrual over time\n\nAPY is affected by multiple factors including trading volume, pool size, time until maturity, and the relationship between assets in the pool. The protocol uses complex mathematical formulas to determine fair pricing and yield distribution based on these parameters.\n\nWhile similar to traditional finance APY concepts, Depeg Swap's implementation includes DeFi-specific adaptations to handle different asset types, time-weighted returns, and dynamic market conditions."
+  },
+  {
+    "terms": [
+      "Gas Fee"
+    ],
+    "definition": "# Gas Fee\n\nA gas fee is the cost users pay to execute transactions on blockchain networks like Ethereum, where the Depeg Swap protocol operates. It represents the computational expense of performing operations such as swaps, redemptions, or contract deployments, and is measured in units of the network's native cryptocurrency (e.g., ETH).\n\nIn the Depeg Swap codebase, various fee structures exist alongside gas fees, including redemption fees, repurchase fees, and AMM base fees that are configurable by protocol managers. However, gas fees specifically refer to the network transaction costs that are separate from and additional to these protocol-specific fees.\n\nThe code demonstrates awareness of gas optimization through techniques like:\n- Pausing gas metering in tests for heavy operations: `vm.pauseGasMetering()`\n- Optimized builds with IR compilation for production: `FOUNDRY_PROFILE=optimized forge build`\n- Careful design of fee calculation functions to minimize computational complexity\n\nUnderstanding gas fees is essential for both developers implementing the protocol and users interacting with it, as these costs directly impact the economic viability of transactions and overall user experience."
+  },
+  {
+    "terms": [
+      "Smart Contract"
+    ],
+    "definition": "# Smart Contract\n\nA smart contract is a self-executing program deployed on a blockchain that automatically enforces predefined rules without requiring intermediaries. In the context of Depeg Swaps, smart contracts form the foundational infrastructure of the protocol, implementing financial logic for creating and trading tokenized risk instruments.\n\nThese contracts are written in Solidity (for Ethereum compatibility) and contain critical components such as:\n\n1. **Core Protocol Logic** - The `ModuleCore` contract orchestrates the protocol's primary functions, connecting various components and enforcing protocol rules.\n\n2. **Asset Management** - Contracts like `Asset` and `AssetFactory` handle the creation and lifecycle of tokenized instruments, including their properties, state transitions, and redemption rules.\n\n3. **Libraries** - Specialized code modules like `VaultLibrary`, `PsmLibrary`, and `MathHelper` provide reusable functions for complex calculations and operations.\n\n4. **Interface Definitions** - Contracts communicate through standardized interfaces (like `ILiquidator`) that define the expected function signatures and data structures.\n\nSmart contracts in this protocol are immutable once deployed, meaning their code cannot be altered, which provides security guarantees to users. They're also transparent, as anyone can inspect the exact rules governing the protocol by examining the deployed bytecode or verified source code.\n\nThe protocol's formal verification approach using Kontrol demonstrates a commitment to mathematical correctness of these contracts, moving beyond traditional testing to prove that critical properties of the system hold under all possible conditions."
+  },
+  {
+    "terms": [
+      "DeFi"
+    ],
+    "definition": "# DeFi\n\nDecentralized Finance (DeFi) refers to a blockchain-based financial ecosystem that recreates traditional financial services without centralized intermediaries. In the context of Depeg Swap, DeFi represents the environment where users can manage, hedge, and trade depeg risk - the risk of stablecoins deviating from their pegged value.\n\nThe codebase implements DeFi primitives including:\n\n- **Market infrastructure**: Trading pairs between pegged assets (stablecoins) and redemption assets\n- **Liquidity mechanisms**: Liquidity vaults (LV) and Price Stability Mechanisms (PSM) for asset management\n- **Risk management tools**: Time-bound financial instruments with expiry handling and liquidation processes\n- **Asset swapping functions**: Like `swapDsForRa`, `swapRaForDs` for exchanging assets without intermediaries\n\nDeFi in this protocol creates financial instruments allowing users to protect themselves against depeg events, which can have cascading effects across interconnected DeFi markets where stablecoins serve as foundational building blocks."
+  },
+  {
+    "terms": [
+      "CeFi"
+    ],
+    "definition": "# CeFi\n\nCeFi (Centralized Finance) refers to financial services and platforms in the cryptocurrency ecosystem that operate through centralized intermediaries. Unlike DeFi (Decentralized Finance) which runs entirely on blockchain via smart contracts, CeFi platforms maintain control over user funds and transactions through traditional company structures.\n\nIn the context of blockchain applications like the Depeg Swap codebase, CeFi represents the bridge between traditional financial systems and cryptocurrency. CeFi platforms typically offer:\n\n- Custodial wallets where the company holds private keys\n- Centralized exchange services with orderbooks maintained off-chain\n- KYC/AML compliance requirements\n- Customer support and account recovery options\n- Fiat on/off ramps for moving between traditional currency and crypto\n\nCeFi platforms trade the censorship resistance and trustlessness of pure blockchain systems for improved user experience, regulatory compliance, and often greater liquidity and speed."
+  },
+  {
+    "terms": [
+      "DAO"
+    ],
+    "definition": "# DAO\n\nA DAO (Decentralized Autonomous Organization) is a blockchain-based organizational structure where governance and decision-making are distributed across token holders rather than centralized in traditional hierarchies. In the context of DeFi protocols like Depeg Swap, a DAO enables community members to collectively propose, vote on, and implement changes to protocol parameters, treasury allocations, and development priorities. DAOs typically operate through on-chain voting mechanisms where voting power is proportional to token holdings, creating transparent and trustless governance systems that align with blockchain's decentralization ethos."
+  },
+  {
+    "terms": [
+      "Liquidity Mining"
+    ],
+    "definition": "# Liquidity Mining\n\nA DeFi incentive mechanism where users provide assets to liquidity pools and receive rewards in return for their contribution. In Depeg Swap V1, liquidity providers deposit assets through functions like `depositLv()`, receiving LP tokens that represent their share of the pool. The protocol manages this liquidity through mechanisms in `VaultPoolLib` and `PsmLib`, allowing providers to later redeem their position via `redeemLv()`. While not explicitly shown in the code snippets, typical liquidity mining protocols distribute rewards proportionally to each provider's contribution, incentivizing users to supply and maintain liquidity that enables efficient token swaps and market operations. This system balances incentives against risks like impermanent loss, creating a sustainable liquidity ecosystem."
+  },
+  {
+    "terms": [
+      "Protocol Fee"
+    ],
+    "definition": "# Protocol Fee\n\nIn the context of decentralized finance protocols like Depeg Swaps V1, a Protocol Fee is a percentage of transaction value collected from various operations within the system to generate revenue for protocol development, maintenance, and growth. \n\nProtocol fees in Depeg Swaps V1 are implemented through multiple fee types, including AMM Base Fees for swap operations, Redemption Fees when users redeem assets, Repurchase Fees during buyback transactions, and Router Extra Fees for certain operations. These fees are:\n\n- Configurable per market/pool through governance\n- Represented as percentages (often in basis points)\n- Subject to fee-splitting mechanisms that distribute portions to different protocol stakeholders\n- Collected in the underlying tokens of each transaction\n- Typically separate from liquidity provider fees\n\nFor example, in Depeg Swaps V1, the protocol can set an \"AMM Base Fee\" of 0.3%, a \"Redemption Fee\" of 0.1%, and specify that 50% of these fees go to the protocol treasury while the remainder might go to other ecosystem participants."
+  },
+  {
+    "terms": [
+      "ERC20"
+    ],
+    "definition": "# ERC20\n\nERC20 (Ethereum Request for Comment 20) is a technical standard that defines a common interface for fungible tokens on the Ethereum blockchain. It specifies a set of functions and events that enable tokens to be transferred between addresses, approve spending by third parties, and track token balances. \n\nThe standard requires implementation of core functions including `transfer()` (send tokens directly), `transferFrom()` (transfer tokens on behalf of someone else), `approve()` (authorize another address to spend tokens), `balanceOf()` (check an address's token balance), and `allowance()` (view approved spending limits). \n\nERC20 tokens serve as the foundation for most tokens in decentralized finance (DeFi), enabling interoperability between different applications and services. The standard makes it possible for tokens to be easily integrated into wallets, exchanges, and other smart contracts, establishing a consistent interaction pattern across the Ethereum ecosystem.\n\nIn practical implementation, developers must carefully handle token transfers, decimal precision (which can vary between tokens), and potential security issues like reentrancy. Extensions to the basic standard, such as EIP-2612's `permit()` function, enable gasless transactions and further enhance utility."
+  },
+  {
+    "terms": [
+      "ERC1155"
+    ],
+    "definition": "# ERC1155\n\nA token standard that allows for the creation and management of multiple token types within a single smart contract. In the Depeg Swap V1 codebase, ERC1155 is implemented via ERC1967Proxy to efficiently handle various assets with batch operations. This standard supports both fungible and non-fungible tokens, enabling gas-efficient transfers and simplified token management across the platform's different components. The implementation provides flexibility for the swap protocol to interact with multiple token types while optimizing for gas costs and operational complexity."
+  },
+  {
+    "terms": [
+      "ERC6909"
+    ],
+    "definition": "# ERC6909\n\nERC6909 is a gas-efficient standard for managing multiple fungible tokens within a single contract. Unlike ERC20 which requires separate contracts for each token, ERC6909 enables a contract to manage multiple token types identified by unique IDs. Key features include:\n\n- Support for multiple token IDs within one contract\n- Operator approval system for third-party transfers\n- Streamlined balance tracking with optimized storage layout\n- Gas-efficient mint, burn, and transfer operations\n\nIn Depeg Swap, ERC6909 is used for LP token management, providing significant gas savings compared to using multiple ERC20 tokens. The standard works harmoniously with the protocol's flash accounting system, allowing efficient balance tracking throughout transactions while simplifying token operations. This approach reduces transaction costs by eliminating redundant approve and transfer calls that would be required with separate tokens."
+  },
+  {
+    "terms": [
+      "X96"
+    ],
+    "definition": "# X96\n\nA fixed-point number format used in decentralized finance protocols to represent prices and other numerical values with high precision. It involves multiplying a decimal number by 2^96 and storing it as an integer. This technique allows smart contracts to handle fractional values despite the lack of native floating-point support in blockchain environments.\n\nThe X96 representation is particularly important for:\n\n1. Representing the square root of price ratios between two tokens in a liquidity pool\n2. Enabling accurate calculations for determining swap amounts\n3. Supporting concentrated liquidity functions where precise price boundaries are essential\n4. Minimizing rounding errors in financial calculations\n\nWhen you see a variable like `sqrtPriceX96` in a contract, it means the value stored is the actual square root of the price multiplied by 2^96. To convert back to the actual value, divide by 2^96.\n\nThis format was popularized by Uniswap V3 and has been adopted by other protocols due to its effectiveness in handling the mathematical requirements of modern automated market makers."
+  },
+  {
+    "terms": [
+      "Concentrated Liquidity"
+    ],
+    "definition": "# Concentrated Liquidity\n\nConcentrated liquidity is a liquidity provisioning mechanism in Depeg Swap that allows liquidity providers to allocate their capital within specific price ranges rather than distributing it uniformly across the entire price spectrum. This approach enhances capital efficiency by focusing liquidity where it's most likely to be utilized—typically around the current market price.\n\nIn the Depeg Swap implementation, the system calculates optimal price ratios using functions like `__getAmmCtPriceRatio` in VaultLib.sol, which determines where to concentrate liquidity based on market conditions and historical interest yield annualized (HIYA) rates. When providing liquidity, the protocol uses tolerance parameters to define upper and lower price bounds, creating a concentrated position as seen in `__provideAmmLiquidityFromPool`.\n\nThis design allows for significantly higher capital efficiency compared to traditional AMMs, particularly beneficial for trading pairs expected to maintain relatively stable price relationships. Liquidity providers earn fees only when trades occur within their specified price range, incentivizing them to actively manage their positions according to market conditions.\n\nUnlike traditional constant product AMMs where liquidity is spread infinitely from zero to infinity, concentrated liquidity positions become inactive when the market price moves outside their range, preserving capital for more efficient deployment elsewhere."
+  },
+  {
+    "terms": [
+      "Constant Product Formula"
+    ],
+    "definition": "# Constant Product Formula\n\nThe Constant Product Formula is a fundamental mathematical principle used in Automated Market Makers (AMMs) expressed as `x * y = k`, where `x` and `y` represent token reserves in a liquidity pool and `k` is a constant value. This formula ensures that when trades occur, the product of token quantities remains unchanged, creating a deterministic pricing mechanism that works without order books.\n\nIn the codebase, this principle is applied in functions like `getProportionalAmount` in `ProtectedUnitMath.sol`, which maintains reserve ratios, and `calculateProvideLiquidityAmountBasedOnCtPrice` in `MathHelper.sol`, which determines token contributions when adding liquidity.\n\nThe formula creates a hyperbolic price curve where small trades have minimal price impact while larger trades face increasing slippage. This property ensures liquidity pools can never be completely drained and enables permissionless, decentralized trading while incentivizing arbitrageurs to maintain price equilibrium."
+  },
+  {
+    "terms": [
+      "Invariant"
+    ],
+    "definition": "# Invariant\n\nIn the context of automated market makers (AMMs) in decentralized finance, an invariant is a mathematical property that remains constant throughout trading operations, ensuring the integrity and stability of the liquidity pool. A common invariant in many AMMs is the constant product formula `x * y = k`, where `x` and `y` represent the reserves of two tokens in a pool, and `k` is a constant value that must be maintained regardless of trading activity.\n\nThe invariant serves several crucial functions:\n\n1. **Balance Maintenance**: It ensures that as one token's quantity decreases during a trade, the other increases according to a defined mathematical relationship.\n\n2. **Price Determination**: The ratio between the reserves determines the exchange rate between tokens, with the invariant formula dictating how this ratio changes after trades.\n\n3. **Slippage Mechanism**: Larger trades cause greater price impact according to the invariant, creating natural resistance to price manipulation and protecting liquidity providers.\n\n4. **Liquidity Preservation**: By maintaining a mathematical relationship between assets, the invariant ensures the pool never runs out of liquidity completely.\n\nIn the Depeg Swap codebase, invariants play a particularly important role in managing risk during stablecoin depegging events, providing the mathematical foundation for stable and predictable trading behavior even in volatile market conditions."
+  },
+  {
+    "terms": [
+      "Mid Price"
+    ],
+    "definition": "# Mid Price\n\nIn decentralized exchanges, mid price represents the theoretical fair value of one token in terms of another based on the current state of a liquidity pool. In the Depeg Swap V1 protocol, mid price is calculated through internal price functions like `calculateInternalPrice` in `MathHelper.sol`, which computes prices based on token reserves and time parameters.\n\nThe mid price differs from execution price—it's what an infinitesimally small trade would receive with zero market impact, while actual trades experience slippage as they shift reserves. For example, in the codebase, CT token price is calculated using reserve ratios, DS price is derived as `1 - ctPrice` (unless ctPrice exceeds 1), and RA price is normalized to 1.\n\nMid prices serve as reference points for swap outcome estimation, arbitrage identification, and risk assessment within the protocol. This theoretical price is particularly important for formal verification and testing of the protocol's economic properties, as seen in test files like `navMath.sol` and `arpMath.t.sol`."
+  },
+  {
+    "terms": [
+      "AMM Protocol",
+      "Automated Market Maker",
+      "AMM"
+    ],
+    "definition": "# AMM Protocol\n\nAn Automated Market Maker (AMM) protocol is a decentralized exchange mechanism that replaces traditional order books with algorithmic price determination and liquidity pools. In this codebase, AMMs provide permissionless trading infrastructure through smart contracts that:\n\n1. Maintain liquidity pools of paired assets (like RA/CT tokens)\n2. Calculate exchange rates using mathematical formulas (as seen in `__getAmmCtPriceRatio`)\n3. Allow anyone to provide liquidity and earn fees (via functions like `__provideAmmLiquidityFromPool`)\n4. Enable trustless, decentralized token swaps without intermediaries\n5. Support customizable parameters (through methods like `updateAmmBaseFeePercentage`)\n\nThe implementation uses Uniswap-style interfaces (`addLiquidity`, `calculateWithTolerance`) while adding protocol-specific hooks (`CorkHook`) for extended functionality. The AMM system ensures continuous liquidity availability and transparent price discovery even in markets that might otherwise lack sufficient trading volume or centralized market-making."
+  },
+  {
+    "terms": [
+      "address(0)"
+    ],
+    "definition": "# address(0)\n\n`address(0)` refers to the Ethereum zero address (0x0000000000000000000000000000000000000000), which serves as a special sentinel value in smart contracts. In the Depeg Swap V1 codebase, it's primarily used for:\n\n1. **Input validation** - Preventing contracts from being initialized with null addresses for critical components:\n   ```solidity\n   // contracts/core/Withdrawal.sol\n   constructor(address _vault) {\n       if (_vault == address(0)) {\n           revert ZeroAddress();\n       }\n       VAULT = _vault;\n   }\n   ```\n\n2. **Representing uninitialized state** - Variables often default to `address(0)` before being properly set:\n   ```solidity\n   // From tests\n   assertEq(address(config.treasury()), address(0));\n   ```\n\n3. **Error handling** - Custom errors like `ZeroAddress()` or `InvalidAddress` are thrown when operations attempt to use the zero address inappropriately:\n   ```solidity\n   vm.expectRevert(CorkConfig.InvalidAddress.selector);\n   config.setTreasury(address(0));\n   ```\n\nThis pattern reflects standard Ethereum development practice where checking for `address(0)` serves as a security measure to prevent operations on uninitialized addresses that could lead to loss of funds or other vulnerabilities."
+  },
+  {
+    "terms": [
+      "EIP-1153"
+    ],
+    "definition": "# EIP-1153\n\nEIP-1153 (Transient Storage Opcodes) is an Ethereum Improvement Proposal that introduces new opcodes for temporary storage within smart contracts. It adds `TLOAD` and `TSTORE` opcodes to the Ethereum Virtual Machine, allowing developers to efficiently store and retrieve data that persists only for the duration of a transaction. \n\nThis feature provides significant gas savings compared to regular storage operations, making it ideal for temporary variables, reentrancy guards, and inter-function communication within a transaction's execution. In the Depeg Swap V1 codebase, EIP-1153 would enable more gas-efficient implementations of complex swap operations and security mechanisms.\n\nWhile supported at the EVM level since the Cancun/Dencun upgrade, developers must use inline assembly to access these opcodes in Solidity code. When implemented correctly, transient storage offers substantial performance benefits without the permanence costs of regular storage."
+  },
+  {
+    "terms": [
+      "DEX"
+    ],
+    "definition": "# DEX\n\nA Decentralized Exchange (DEX) is a peer-to-peer marketplace for trading cryptocurrencies without intermediaries. It refers to protocols that enable trustless, permissionless token swaps and liquidity provision through smart contracts. Unlike centralized exchanges, DEXs allow users to maintain control of their assets, trade directly from their wallets, and interact with on-chain liquidity pools.\n\nIn the context of Depeg Swap V1, DEX functionality is implemented to create a specialized trading system focused on handling depeg protection for assets. The protocol uses smart contracts like ModuleCore to manage swap assets, track swap IDs, and facilitate trading through integration with existing DEX infrastructure. The implementation includes features such as rollover mechanisms for expired assets and protected units that provide insurance-like protection against asset depegging events."
+  },
+  {
+    "terms": [
+      "ERC721"
+    ],
+    "definition": "# ERC721\n\nERC721 is a standard for non-fungible tokens (NFTs) on the Ethereum blockchain. It defines a set of functions and events that create unique tokens with distinct IDs, where each token can have only one owner at a time. In the Depeg Swap V1 protocol, ERC721 tokens likely represent user positions in swaps and liquidity provision.\n\nCore functions include `transferFrom`, `approve`, and `balanceOf`, with optional extensions for metadata and enumeration. Contracts receiving ERC721 tokens implement the `onERC721Received` function to safely handle transfers. Unlike ERC20 tokens which are fungible, each ERC721 token has unique properties and cannot be substituted for another, making them ideal for representing distinct assets, collectibles, or positions in DeFi protocols."
+  },
+  {
+    "terms": [
+      "EIP-712"
+    ],
+    "definition": "# EIP-712\n\nEIP-712 (Ethereum Improvement Proposal 712) is a standard for typed structured data hashing and signing in Ethereum. It solves the problem of users being presented with unintelligible hex strings when signing messages by providing a structured way to format, hash, and sign data with clear types.\n\nThe standard defines a schema for creating domain separators (unique identifiers for dApps/contracts) and typed data structures that can be hashed consistently across implementations. This enables more secure, human-readable transaction signing experiences.\n\nKey components of EIP-712 implementation include:\n\n1. **Domain Separator**: A unique identifier containing information about the signing domain:\n   ```solidity\n   keccak256(\n       abi.encode(\n           keccak256(\"EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)\"),\n           keccak256(bytes(name)),\n           keccak256(bytes(version)),\n           chainId,\n           verifyingContract\n       )\n   )\n   ```\n\n2. **Typed Data Hashing**: Combines domain separator with structured data hash:\n   ```solidity\n   keccak256(abi.encodePacked(\"\\x19\\x01\", DOMAIN_SEPARATOR(), dataHash))\n   ```\n\n3. **Struct Hashing**: Type-specific hashing of structured data according to predefined schemas.\n\nIn the provided codebase, EIP-712 is used for implementing permit functionality, signature verification, and secure off-chain message signing, particularly for token approvals and transfers."
+  },
+  {
+    "terms": [
+      "Time-Weighted Average Market Maker (TWAMM)",
+      "TWAMM"
+    ],
+    "definition": "# Time-Weighted Average Market Maker (TWAMM)\n\nA Time-Weighted Average Market Maker (TWAMM) is a specialized automated market-making mechanism that executes large orders gradually over time instead of all at once. By dividing a large trade into smaller portions that execute at regular intervals, TWAMMs minimize price impact and reduce slippage that would otherwise occur with large, single-execution trades.\n\nIn this codebase, the TWAMM functionality is implemented through time-aware swap calculations that normalize order execution across a defined time window. Key components include:\n\n1. Time normalization functions like `computeT()` that track progression through an order's lifecycle\n2. Bisection solvers that calculate optimal execution amounts based on the remaining time\n3. Mathematical models that adjust pricing based on elapsed time between start and end periods\n\nThis approach prevents market manipulation, reduces volatility from large trades, and typically results in better average execution prices compared to standard AMMs. The implementation includes decay mechanisms and risk premium calculations that adjust as orders progress through their execution windows."
+  },
+  {
+    "terms": [
+      "Variant Maps"
+    ],
+    "definition": "# Variant Maps\n\nA binary encoding pattern used in the Angstrom protocol to efficiently pack multiple boolean flags into a single byte. Implemented through types like ToBOrderVariantMap and UserOrderVariantMap, these structures enable gas-efficient storage and processing of order properties such as direction (zeroForOne), internal usage flags, and signature types. Variant maps help optimize gas usage while maintaining clear, type-safe access to order properties.\n\nIn asset management, variant maps also help generate consistent identifiers through functions like `_generateVariant` and `_generateSymbolWithVariant`, ensuring that related assets maintain consistent variant numbers across deployments. This approach significantly reduces gas costs for storage operations while preserving a clear programming model."
+  },
+  {
+    "terms": [
+      "ECDSA"
+    ],
+    "definition": "# ECDSA\n\nECDSA (Elliptic Curve Digital Signature Algorithm) is a cryptographic algorithm used to create unforgeable digital signatures that verify the authenticity of messages or transactions. In blockchain and smart contract systems, ECDSA provides three critical functions:\n\n1. **Signature Generation**: Using a private key to sign a message hash, producing values (v, r, s)\n2. **Signature Verification**: Using a public key to validate that a signature was created by the corresponding private key\n3. **Address Recovery**: Extracting the signer's address from a signature and message\n\nECDSA in Ethereum uses the secp256k1 elliptic curve and offers advantages over RSA signatures through smaller key sizes and faster operations while maintaining equivalent security. The implementation typically handles:\n\n```solidity\n// Signature structure\nstruct Signature {\n    uint8 v;    // Recovery identifier\n    bytes32 r;  // First 32 bytes of signature\n    bytes32 s;  // Second 32 bytes of signature\n}\n```\n\nEthereum-specific implementations include protections against signature malleability (restricting s-values to the lower half of the curve) and support for different signature formats (standard 65-byte and compressed EIP-2098 64-byte signatures). The `ecrecover` precompile enables on-chain signature verification, forming the foundation for features like meta-transactions, multisignature wallets, and off-chain message verification."
+  },
+  {
+    "terms": [
+      "ERC1271"
+    ],
+    "definition": "# ERC1271\n\nERC1271 is a standard interface that enables smart contracts to validate signatures. It defines an `isValidSignature` function that takes a message hash and a signature, returning a specific magic value (`0x1626ba7e`) if the signature is valid. \n\nIn Depeg Swap V1, this standard is implemented to support signature verification for both Externally Owned Accounts (EOAs) and smart contract wallets. The verification logic checks if the signer is a contract and, if so, calls the ERC1271 interface to validate the signature according to the contract's custom logic.\n\nThis implementation is crucial for:\n- Supporting smart contract wallets\n- Enabling custom signature validation schemes (multi-sig, time-based conditions)\n- Improving interoperability with various wallet implementations\n- Allowing for more complex authorization models than simple EOA signatures\n\nThe core interface is simple but powerful:\n\n```solidity\ninterface IERC1271 {\n    function isValidSignature(bytes32 hash, bytes memory signature) \n        external view returns (bytes4 magicValue);\n}\n```\n\nWhen integrated with permit-style functions and token approvals, ERC1271 allows smart contracts to participate in workflows that previously required EOA signatures, enhancing the accessibility and flexibility of the protocol."
+  },
+  {
+    "terms": [
+      "Application-Specific Sequencing (ASS)",
+      "Application-Specific Sequencing",
+      "(ASS)"
+    ],
+    "definition": "# Application-Specific Sequencing (ASS)\n\nApplication-Specific Sequencing (ASS) is a blockchain design pattern where an individual application controls the ordering of its own transactions rather than relying on the blockchain's default sequencing mechanism. In the Depeg Swap protocol, this manifests through internal state management where transactions like issuances, rollovers, and redemptions follow application-defined ordering rules.\n\nCore elements in the codebase that implement ASS include:\n\n1. **Issuance ID tracking** - The protocol maintains and increments sequential identifiers (`dsId`, `globalAssetIdx`) to enforce custom ordering of assets.\n\n2. **Expiry-based sequencing** - Functions like `ff_expired()` and expiry time management ensure transactions follow time-based sequencing rules specific to the application's needs.\n\n3. **Controlled state transitions** - Methods like `_initOnNewIssuance()` and `onNewIssuance()` manage precise state transitions in a controlled sequence.\n\nThe primary benefit of ASS in this context is protecting users from MEV (Miner Extractable Value) and ensuring fair, predictable transaction ordering that aligns with the protocol's economic design rather than being subject to arbitrary blockchain-level sequencing that might disadvantage users."
+  },
+  {
+    "terms": [
+      "MEV (Maximal Extractable Value)",
+      "MEV",
+      "Maximal Extractable Value"
+    ],
+    "definition": "# MEV (Maximal Extractable Value)\n\nMEV refers to the maximum value that can be extracted from blockchain networks by reordering, inserting, or censoring transactions within blocks. In the context of Angstrom, MEV mitigation is a core feature aimed at protecting both users and liquidity providers (LPs) from potential exploitation. The project implements mechanisms such as batch processing of limit orders at uniform prices and a \"Top of Block (ToB) Auction\" to redistribute value that would otherwise be extracted by arbitrageurs. These strategies help ensure fair trade execution, limit censorship, and minimize value leakage from the underlying Automated Market Maker (AMM), ultimately creating a more equitable and efficient decentralized exchange ecosystem."
+  },
+  {
+    "terms": [
+      "Orderbook"
+    ],
+    "definition": "# Orderbook\n\nAn orderbook is a fundamental data structure in trading systems that maintains and organizes buy (bid) and sell (ask) orders for a specific trading pair or asset. \n\nIn the provided codebase, the orderbook implementation contains:\n\n```rust\n// crates/matching-engine/src/book/mod.rs\npub struct OrderBook {\n    id:   PoolId,                                             // Unique identifier for the trading pair\n    amm:  Option<MarketSnapshot>,                             // Optional AMM state for hybrid markets\n    bids: Vec<OrderWithStorageData<GroupedVanillaOrder>>,     // Collection of buy orders\n    asks: Vec<OrderWithStorageData<GroupedVanillaOrder>>      // Collection of sell orders\n}\n```\n\nThe orderbook serves several critical functions:\n1. **Price discovery** - By organizing orders by price, it reveals the current market valuation\n2. **Liquidity management** - Shows available trading volume at different price levels\n3. **Order matching** - Provides the data structure for matching compatible buy and sell orders\n\nOrders in the system are created through functions like `createOrderVault()` and `createOrderProtectedUnit()`, which record details including tokens being exchanged, amounts, and reference IDs. The system integrates with Cow Protocol for actual order execution, using internal reference IDs to track orders throughout their lifecycle from creation to settlement.\n\nThe orderbook implementation uses sorting strategies to maintain orders in the correct sequence (typically by price and then by time or volume), allowing for efficient matching and execution of trades."
+  },
+  {
+    "terms": [
+      "Top-of-Block (ToB)",
+      "Top-of-Block",
+      "ToB"
+    ],
+    "definition": "# Top-of-Block (ToB)\n\nA specialized order type in blockchain systems, particularly in decentralized exchanges, designed to be executed at the beginning of a new block. ToB orders are prioritized for execution before other transactions, giving traders a strategic advantage in time-sensitive trading scenarios. \n\nThese orders contain specific parameters including asset quantities for input and output, gas limits, token addresses, block number validity constraints, and recipient information. A dedicated protocol mechanism validates and executes ToB orders as the first transactions in a block, helping traders minimize slippage and capitalize on fleeting arbitrage opportunities.\n\nThe structure of ToB orders is defined in contracts like `ToBOrderBuffer.sol`, which enforce the rules for their block-top execution priority. This execution guarantee is particularly valuable in volatile or competitive markets where transaction ordering can significantly impact trade outcomes."
+  }
+]

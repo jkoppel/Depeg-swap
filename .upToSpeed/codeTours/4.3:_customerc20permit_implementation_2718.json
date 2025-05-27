@@ -1,0 +1,163 @@
+{
+  "title": "4.3: CustomERC20Permit implementation",
+  "id": "qBYKl9aZCj4uTNT7/viBAuBNhLI3KYvr7zXAAy+V1rU=",
+  "originalId": 2718,
+  "position": 15,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "We will walk through `CustomERC20Permit.sol` to see how it extends the standard **ERC-2612** permit flow with an extra `functionName` binding and verify that every requirement in `ICustomERC20Permit` is enforced.",
+      "title": "",
+      "id": "32270"
+    },
+    {
+      "type": "highlight",
+      "description": "The contract pulls in OpenZeppelin’s `ERC-20 core`, the `ECDSA helper`, the `EIP-712 domain helper`, and the `Nonces utility`. These provide all the allowance bookkeeping, signature recovery, and nonce-tracking mechanics we need.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 8
+        }
+      ],
+      "title": "",
+      "id": "32271"
+    },
+    {
+      "type": "highlight",
+      "description": "Line 20 mixes every helper into the inheritance list, then lines 21-22 declare `PERMIT_TYPEHASH`. Notice the extra `bytes32` `functionHash` field tacked onto the canonical `ERC-2612` struct – this locks each signature to a specific downstream call.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 18,
+          "end": 22
+        }
+      ],
+      "title": "",
+      "id": "32272"
+    },
+    {
+      "type": "highlight",
+      "description": "Two bespoke errors keep reverts concise and informative:\n- `ERC2612ExpiredSignature` – an already-passed deadline (lines 26-29).\n- `ERC2612InvalidSigner` – recovered signer ≠ owner (lines 30-34).",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 26,
+          "end": 34
+        }
+      ],
+      "title": "",
+      "id": "32273"
+    },
+    {
+      "type": "highlight",
+      "description": "The constructor feeds the `EIP-712` domain separator with the token’s `name` and a fixed version `\"1\"` – mirroring `OpenZeppelin`’s reference implementation and fulfilling the interface’s expectations.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 35,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "32274"
+    },
+    {
+      "type": "highlight",
+      "description": "permit now takes one extra parameter – `functionName`. Everything else mirrors the standard signature, so existing signing tools only need to add this final string before hashing.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 46,
+          "end": 55
+        }
+      ],
+      "title": "",
+      "id": "32275"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 1 – **deadline guard**.  If `block.timestamp` exceeds `deadline` the call reverts with `ERC2612ExpiredSignature`, matching `NatSpec`’s requirement that the deadline be in the future.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 56,
+          "end": 58
+        }
+      ],
+      "title": "",
+      "id": "32276"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 2 – **function binding & nonce consumption**.  The user-supplied string is hashed (`line 61`) and packed into the struct together with `_useNonce(owner)`, which atomically increments the nonce so the same signature cannot replay.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 60,
+          "end": 63
+        }
+      ],
+      "title": "",
+      "id": "32277"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 3 – **signature verification**.  `hashTypedDataV4` produces the EIP-712 digest, `ECDSA.recover` fetches the signer, and any mismatch with owner triggers **ERC2612InvalidSigner** – enforcing the **valid-secp256k1-signature** rule.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 65,
+          "end": 70
+        }
+      ],
+      "title": "",
+      "id": "32278"
+    },
+    {
+      "type": "highlight",
+      "description": "Step 4 – **state update**.  With every check satisfied, `_approve` writes the new allowance, exactly like a normal `approve` call.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 72,
+          "end": 73
+        }
+      ],
+      "title": "",
+      "id": "32279"
+    },
+    {
+      "type": "highlight",
+      "description": "The overrides for `nonces` and `DOMAIN_SEPARATOR` simply expose the inherited helpers without changing behaviour – guaranteeing full drop-in compatibility.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 78,
+          "end": 88
+        }
+      ],
+      "title": "",
+      "id": "32280"
+    },
+    {
+      "type": "highlight",
+      "description": "The interface’s `NatSpec` bullets enumerate the same rules we just traced in the implementation: **future deadline**, **correct nonce**, **valid signature**, and **allowance-only semantics**.",
+      "file": "contracts/libraries/ERC/ICustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 52,
+          "end": 59
+        }
+      ],
+      "title": "",
+      "id": "32281"
+    },
+    {
+      "type": "textOnly",
+      "description": "You now have a clear map of where each security check lives, making it straightforward to audit the helper or extend it with features like batch-permits while preserving the same guarantees.",
+      "title": "",
+      "id": "32282"
+    }
+  ]
+}

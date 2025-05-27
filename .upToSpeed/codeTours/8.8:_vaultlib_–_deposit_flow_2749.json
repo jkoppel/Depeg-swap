@@ -1,0 +1,137 @@
+{
+  "title": "8.8: VaultLib – Deposit Flow",
+  "id": "ik/lY9GKxw+mtqWtSx1gmXEPSciyrEvI/yANnEEV2uA=",
+  "originalId": 2749,
+  "position": 40,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This walkthrough follows a user’s **happy-path** `depositLv` call along the **happy-path**: from the public entry-point, through the library routines that slice `CT`, add `AMM` liquidity, mint `LV`, and finally refresh the `NAV` circuit-breaker.",
+      "title": "",
+      "id": "32783"
+    },
+    {
+      "type": "highlight",
+      "description": "`depositLv` does only three things: `pause-check` (line 33), fetch the `State` for this pair, and delegate to `state.deposit` (line 35).  All substantial work lives in **VaultLib**.",
+      "file": "contracts/core/Vault.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 36
+        }
+      ],
+      "title": "",
+      "id": "32784"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultLibrary.deposit` starts by validating the `amount`, ensuring we are before expiry (line 328) and locking the incoming RA (line 330). The call at line 333 hands the `amount` to `_splitCtWithStrategy` – the first transformation step.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 316,
+          "end": 335
+        }
+      ],
+      "title": "",
+      "id": "32785"
+    },
+    {
+      "type": "highlight",
+      "description": "`_splitCtWithStrategy` decides how much `RA` should become `CT` (strategy percentage). It mints that `CT` + the matching `DS` (lines 450–455), bumps `vault.ctBalance` (line 455) and sends the `DS` into `FlashSwap` reserve (line 457). The function returns the leftover `RA` and the `CT` amount just minted.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 441,
+          "end": 458
+        }
+      ],
+      "title": "",
+      "id": "32786"
+    },
+    {
+      "type": "highlight",
+      "description": "The remaining **RA** is funnelled into `__provideLiquidityWithRatioGetLP`. It derives a **RA**/**CT** ratio from market data and passes the figures to `__provideLiquidity`, which will actually interact with the AMM.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 157,
+          "end": 167
+        }
+      ],
+      "title": "",
+      "id": "32787"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside `__provideLiquidity` we create matched `CT` via the `PSM` (line 284), add both tokens to the `AMM` (line 287), register the `CT` with `FlashSwap` (line 288), and finally record the `LP` tokens received (line 290).",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 282,
+          "end": 291
+        }
+      ],
+      "title": "",
+      "id": "32788"
+    },
+    {
+      "type": "highlight",
+      "description": "If this is the first ever deposit the vault is un-initialized.  We mint `LV` 1-to-1 with the `RA` value (`line 355`) and immediately snapshot the NAV for the circuit-breaker (`line 357`).",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 349,
+          "end": 357
+        }
+      ],
+      "title": "",
+      "id": "32789"
+    },
+    {
+      "type": "highlight",
+      "description": "For every subsequent deposit, `_calculateReceivedDeposit` figures out the fair `LV` amount from current `NAV`, and `lv.issue` mints that to the depositor (line 378).",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 374,
+          "end": 379
+        }
+      ],
+      "title": "",
+      "id": "32790"
+    },
+    {
+      "type": "highlight",
+      "description": "The final step ensures the deposit hasn't pushed the Net Asset Value (NAV) outside of acceptable bounds, maintaining system safety through circuit breaker validation.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 420,
+          "end": 425
+        }
+      ],
+      "title": "",
+      "id": "32791"
+    },
+    {
+      "type": "highlight",
+      "description": "During the very first deposit the breaker is not yet seeded, so `forceUpdateNavCircuitBreakerReferenceValue` (lines 603-610) sets the initial NAV snapshot outright.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 603,
+          "end": 612
+        }
+      ],
+      "title": "",
+      "id": "32792"
+    },
+    {
+      "type": "textOnly",
+      "description": "Recap\n- `VaultCore.depositLv` ➜ `VaultLibrary.deposit`\n- Incoming `RA` locked; strategy slices a `CT` portion and mints `CT`+`DS`\n- Remaining `RA`+`CT` provided to the `AMM`, vault gains `LP`\n- `LV` issued (1:1 on first deposit, `NAV`-based afterwards)\n- `NAV` **circuit-breaker** snapshot updated so future deposits & withdrawals remain safe.\n\n**Side-effects touched:** `vault.ctBalance`, `lpBalance`, `FlashSwap` reserve, `LV` totalSupply, and **circuit-breaker** state.",
+      "title": "",
+      "id": "32793"
+    }
+  ]
+}

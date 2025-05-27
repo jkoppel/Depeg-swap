@@ -1,0 +1,72 @@
+{
+  "title": "3.5: SignatureHelper: Splitting ECDSA Signatures",
+  "id": "S5tJkk+H3vGGu7SiTwEfv9vb3yir/VAqtbfhQWQj9ao=",
+  "originalId": 2713,
+  "position": 10,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This short tour shows how the project decomposes a raw 65-byte `ECDSA` signature into its (`v`, `r`, `s`) parts and passes them to downstream `permit` / `meta-tx` calls.",
+      "title": "",
+      "id": "32192"
+    },
+    {
+      "type": "highlight",
+      "description": "A minimal `struct` groups the three values. Keeping them together like this avoids juggling three separate stack variables in call-sites.",
+      "file": "contracts/libraries/SignatureHelperLib.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 11
+        }
+      ],
+      "title": "",
+      "id": "32193"
+    },
+    {
+      "type": "highlight",
+      "description": "`split()` is the public entry point. First it enforces that the bytes array is exactly 65 bytes\u00151 anything else reverts with **InvalidSignatureLength**\u00151 then it forwards to an unchecked splitter and stores the pieces into the struct.",
+      "file": "contracts/libraries/SignatureHelperLib.sol",
+      "highlight": [
+        {
+          "start": 20,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "32194"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside `splitUnchecked()` an inline assembly block reads memory directly:\n- `add(sig, 32)` skips the bytes header and lands on `r` (lines 34–35).\n- the next word holds `s` (line 35).\n- the single recovery byte `v` sits at offset `96`; `byte(0, …)` masks it to 8 bits (line 36). This offset pattern—`32`, `64`, `96`—is the standard **Solidity** layout for a 65-byte signature.",
+      "file": "contracts/libraries/SignatureHelperLib.sol",
+      "highlight": [
+        {
+          "start": 32,
+          "end": 37
+        }
+      ],
+      "title": "",
+      "id": "32195"
+    },
+    {
+      "type": "highlight",
+      "description": "A real caller: before invoking `IERC20Permit.permit()`, the code splits the user-supplied signature and feeds `v`, `r`, `s` straight into the permit function.",
+      "file": "contracts/libraries/DepegSwapLib.sol",
+      "highlight": [
+        {
+          "start": 55,
+          "end": 60
+        }
+      ],
+      "title": "",
+      "id": "32196"
+    },
+    {
+      "type": "textOnly",
+      "description": "Length check followed by assembly reads at memory offsets 32, 64 and 96 is the canonical Solidity way to extract `(v, r, s)` from a `bytes` signature.",
+      "title": "",
+      "id": "32197"
+    }
+  ]
+}

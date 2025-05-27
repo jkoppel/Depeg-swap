@@ -1,0 +1,111 @@
+{
+  "title": "13.3: Child Liquidator Contracts",
+  "id": "vMYbt6e6jJYZka6owMZjKzIszKrvOt7MBa9qE7zzWtE=",
+  "originalId": 2856,
+  "position": 74,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Each liquidation spawns a throw-away contract cloned from `ChildLiquidatorBase`. The clone:\n- remembers the order it is responsible for\n- pre-signs the `CoW order` and grants a one-off allowance\n- afterwards forwards every token it still holds to the appropriate `module`.\n\nThe next steps walk through those pieces.",
+      "title": "",
+      "id": "34177"
+    },
+    {
+      "type": "highlight",
+      "description": "`ChildLiquidatorBase` keeps four pieces of state – the order itself, the CoW `orderUid`, the final receiver, and an internal `refId`. Nothing else is stored in the `clone`.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 23,
+          "end": 37
+        }
+      ],
+      "title": "",
+      "id": "34178"
+    },
+    {
+      "type": "highlight",
+      "description": "`onlyLiquidator` relies on `OwnableUpgradeable`: the parent `Liquidator` is set as owner during initialization, so only the parent can call privileged functions such as `moveFunds`.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 49,
+          "end": 54
+        }
+      ],
+      "title": "",
+      "id": "34179"
+    },
+    {
+      "type": "highlight",
+      "description": "`initialize()` is invoked once right after cloning.  It ties the clone to its parent (line 76), copies the order parameters (lines 77-80), and finally calls `_approveSettlement()` so `CoW Protocol` can settle without further interaction.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 66,
+          "end": 83
+        }
+      ],
+      "title": "",
+      "id": "34180"
+    },
+    {
+      "type": "highlight",
+      "description": "This function implements critical security measures that ensure only CoW Protocol's settlement contract can execute the trade. By pre-authorizing the trade and setting precise allowances, it creates a secure pathway for token movement while preventing unauthorized access.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 88,
+          "end": 95
+        }
+      ],
+      "title": "",
+      "id": "34181"
+    },
+    {
+      "type": "highlight",
+      "description": "`ProtectedUnitChildLiquidator.moveFunds()` forwards both the bought tokens (lines 116-120) and any leftover sell tokens (lines 122-126). Each transfer is pull-based: the **Protected Unit** is approved and then asked to receive the funds, guaranteeing no tokens are stranded.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 114,
+          "end": 126
+        }
+      ],
+      "title": "",
+      "id": "34182"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultChildLiquidator.moveFunds()` follows the same pattern but uses vault-specific callbacks (`receiveTradeExecuctionResultFunds` and `receiveLeftoverFunds`). The dual-transfer structure is identical: first buyToken proceeds, then leftover sellToken.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 144,
+          "end": 156
+        }
+      ],
+      "title": "",
+      "id": "34183"
+    },
+    {
+      "type": "highlight",
+      "description": "The parent `Liquidator` deploys these children with `Clones.cloneDeterministic`, initialises them, and later calls `moveFunds()`. Because the child is a minimal proxy, it contains no business logic beyond the escrow-and-forward cycle we just reviewed.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 131,
+          "end": 173
+        }
+      ],
+      "title": "",
+      "id": "34184"
+    },
+    {
+      "type": "textOnly",
+      "description": "Putting it together:\n\n- the `clone` approves `CoW` once and only once,\n- `CoW` pulls `sellToken` and pushes `buyToken` back,\n- the parent instructs the `clone` to `moveFunds()`,\n- the `clone` forwards `buyToken` and any leftover `sellToken` to the `target module`.\n\nSince the contract lives only for this sequence and exposes a single guarded entry-point, deploying it as a minimal proxy keeps both gas usage and attack surface to a minimum.",
+      "title": "",
+      "id": "34185"
+    }
+  ]
+}

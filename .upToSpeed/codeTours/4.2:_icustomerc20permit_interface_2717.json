@@ -1,0 +1,85 @@
+{
+  "title": "4.2: ICustomERC20Permit interface",
+  "id": "KUmKCP1IluXtrCfqnzrKW1FE2SZe+CgmQJFBs81lJWY=",
+  "originalId": 2717,
+  "position": 14,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Tokens that implement this custom permit interface behave like regular `EIP-2612` `ERC-20`s, but the signed message also contains the name of the function that will immediately use the allowance.  This tour shows how the interface guarantees replay-protection, resists front-running, and exposes the usual `EIP-712` helpers.",
+      "title": "",
+      "id": "32227"
+    },
+    {
+      "type": "highlight",
+      "description": "Lines 6-40 warn about two threats:\n- **Replay** – every permit embeds a nonce so the same signature can never be accepted twice.\n- **Front-running** – because anyone may submit a signed permit, a competing transaction might steal gas / priority.  Contracts should therefore wrap the call in `try/catch` and remain functional even if the permit reverts.\nThe comment's recommended pattern (lines 23-33) shows exactly that defensive approach.",
+      "file": "contracts/libraries/ERC/ICustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 6,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "32228"
+    },
+    {
+      "type": "highlight",
+      "description": "The familiar parameters are followed by an extra one on line 74:\n`string memory functionName`  ➜  the caller must specify the exact method they intend to invoke next.  Because this string is hashed into the EIP-712 struct, a signature created for `swapExactTokens` cannot later be replayed for `withdraw` or any other action.",
+      "file": "contracts/libraries/ERC/ICustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 66,
+          "end": 75
+        }
+      ],
+      "title": "",
+      "id": "32229"
+    },
+    {
+      "type": "highlight",
+      "description": "**NatSpec** spells out five pre-conditions:\n1. **non-zero spender** (line 54)\n2. **deadline in the future** (55)\n3. **valid `secp256k1` signature** (56-57)\n4. **current nonce** (58-59)\n5. **general caution** about the security ideas above (64-65)\nWe will now see where each check lives in the implementation.",
+      "file": "contracts/libraries/ERC/ICustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 52,
+          "end": 65
+        }
+      ],
+      "title": "",
+      "id": "32230"
+    },
+    {
+      "type": "highlight",
+      "description": "Implementation highlights:\n- 56-58 – reverts if `deadline` already passed.\n- 61 – hashes `functionName`, binding the permit to one concrete call.\n- 63 – `_useNonce(owner)` embeds and consumes the current nonce.\n- 67-70 – `ECDSA.recover` proves the signer and rejects mismatches.\n- 72 – `_approve` records the allowance; `OpenZeppelin's ERC-20` forbids the zero address, satisfying requirement #1.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 54,
+          "end": 72
+        }
+      ],
+      "title": "",
+      "id": "32231"
+    },
+    {
+      "type": "highlight",
+      "description": "**EIP-712** flow needs two public pieces:\n- `nonces(owner)` (84) – the ever-increasing counter that grants one-time use.\n- `DOMAIN_SEPARATOR()` (90) – ties the signature to this token contract on this chain, preventing cross-domain replay.",
+      "file": "contracts/libraries/ERC/ICustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 78,
+          "end": 90
+        }
+      ],
+      "title": "",
+      "id": "32232"
+    },
+    {
+      "type": "textOnly",
+      "description": "Whenever you read code that passes a `functionName` into `token.permit`, remember that the allowance signature is welded to that exact action, protected by the owner’s nonce, a deadline, the domain separator, and a strict signer check. With these pieces in mind you can confidently trace any permit-based flow that relies on this interface.",
+      "title": "",
+      "id": "32233"
+    }
+  ]
+}

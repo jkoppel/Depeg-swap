@@ -1,0 +1,111 @@
+{
+  "title": "15.2: Role-based Mintable Tokens (CETH & CUSD)",
+  "id": "AzUheDedFBIoN3EuBAdnwS4PIl+P311m0Lkas5oQrSY=",
+  "originalId": 2872,
+  "position": 80,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "The project’s mock tokens (CETH & CUSD) rely on **OpenZeppelin AccessControl** to protect every supply-changing action.  We will examine `CETH.sol` in detail, then confirm that `CUSD.sol` copies the pattern.",
+      "title": "",
+      "id": "34441"
+    },
+    {
+      "type": "highlight",
+      "description": "Two role IDs are declared by hashing an ASCII label with `keccak256`. Using a `bytes32` hash avoids collisions yet still leaves a readable string in logs.",
+      "file": "contracts/tokens/CETH.sol",
+      "highlight": [
+        {
+          "start": 13,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "34442"
+    },
+    {
+      "type": "highlight",
+      "description": "On deployment the sender becomes `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE`, and `BURNER_ROLE` in one transaction, making that account the initial—and only—authority over new supply.",
+      "file": "contracts/tokens/CETH.sol",
+      "highlight": [
+        {
+          "start": 17,
+          "end": 24
+        }
+      ],
+      "title": "",
+      "id": "34443"
+    },
+    {
+      "type": "highlight",
+      "description": "This function demonstrates the core security pattern - only accounts with minting permission can create new tokens. The modifier ensures strict access control, making the token supply management secure and auditable.",
+      "file": "contracts/tokens/CETH.sol",
+      "highlight": [
+        {
+          "start": 31,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "34444"
+    },
+    {
+      "type": "highlight",
+      "description": "`burn()` mirrors `mint()`: a guarded entry point that delegates the actual accounting to `_burn`, but only for callers holding **BURNER_ROLE**.",
+      "file": "contracts/tokens/CETH.sol",
+      "highlight": [
+        {
+          "start": 40,
+          "end": 42
+        }
+      ],
+      "title": "",
+      "id": "34445"
+    },
+    {
+      "type": "highlight",
+      "description": "`addMinter()` and `removeMinter()` let `DEFAULT_ADMIN_ROLE` delegate or retract minting power. Notice that mere minters cannot further sub-delegate because they lack the admin role.",
+      "file": "contracts/tokens/CETH.sol",
+      "highlight": [
+        {
+          "start": 44,
+          "end": 58
+        }
+      ],
+      "title": "",
+      "id": "34446"
+    },
+    {
+      "type": "highlight",
+      "description": "`addBurner()` and `removeBurner()` provide the identical delegation controls for burning rights, completing the admin’s toolkit.",
+      "file": "contracts/tokens/CETH.sol",
+      "highlight": [
+        {
+          "start": 60,
+          "end": 74
+        }
+      ],
+      "title": "",
+      "id": "34447"
+    },
+    {
+      "type": "highlight",
+      "description": "Opening `CUSD.sol` reveals the same constructor and role constants; the rest of the file repeats the guarded mint/burn plus delegation helpers. The structure is deliberately identical to `CETH`.",
+      "file": "contracts/tokens/CUSD.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 24
+        }
+      ],
+      "title": "",
+      "id": "34448"
+    },
+    {
+      "type": "textOnly",
+      "description": "Because the test harness deploys each token, it automatically holds all three roles and can mint or burn balances at will\u001a perfect for setting up any scenario.",
+      "title": "",
+      "id": "34449"
+    }
+  ]
+}

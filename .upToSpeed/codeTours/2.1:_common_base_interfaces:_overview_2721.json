@@ -1,0 +1,98 @@
+{
+  "title": "2.1: Common Base Interfaces: Overview",
+  "id": "+QIa2E7fHcEK0yP5i+KFGpwsYa5Ep7dhuArhrIARSBA=",
+  "originalId": 2721,
+  "position": 2,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "`contracts/interfaces` hosts every cross-module touch-point. Any contract that needs a shared type **imports** something from here, making the folder the protocol’s common language.",
+      "title": "",
+      "id": "32346"
+    },
+    {
+      "type": "highlight",
+      "description": "`IErrors` is nothing but names – a catalogue of custom-error identifiers that any module can revert with, giving the whole system a single failure vocabulary.",
+      "file": "contracts/interfaces/IErrors.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "32349"
+    },
+    {
+      "type": "highlight",
+      "description": "Hundreds of lines later the pattern is unchanged, underscoring that the `file` contributes only error identifiers – no functions, no state.",
+      "file": "contracts/interfaces/IErrors.sol",
+      "highlight": [
+        {
+          "start": 167,
+          "end": 178
+        }
+      ],
+      "title": "",
+      "id": "32350"
+    },
+    {
+      "type": "highlight",
+      "description": "`IExpiry` layers three lightweight, read-only hooks onto that shared vocabulary: `isExpired`, `expiry`, and `issuedAt`.",
+      "file": "contracts/interfaces/IExpiry.sol",
+      "highlight": [
+        {
+          "start": 11,
+          "end": 20
+        }
+      ],
+      "title": "",
+      "id": "32353"
+    },
+    {
+      "type": "highlight",
+      "description": "`IRates` is even slimmer: a getter (`exchangeRate`) for anyone to read and a governance setter (`updateRate`).",
+      "file": "contracts/interfaces/IRates.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 14
+        }
+      ],
+      "title": "",
+      "id": "32354"
+    },
+    {
+      "type": "highlight",
+      "description": "**Init** — short for *Initialize* — is the governance façade. The first signature spins up a brand-new market (`PSM` + `Liquidity Vault` + `LV token`) in one call.",
+      "file": "contracts/interfaces/Init.sol",
+      "highlight": [
+        {
+          "start": 11,
+          "end": 26
+        }
+      ],
+      "title": "",
+      "id": "32356"
+    },
+    {
+      "type": "highlight",
+      "description": "The rest of the `interface` is a `menu` of `fee-update` and `pause-toggle` helpers that every `module` compiles against.",
+      "file": "contracts/interfaces/Init.sol",
+      "highlight": [
+        {
+          "start": 40,
+          "end": 59
+        }
+      ],
+      "title": "",
+      "id": "32358"
+    },
+    {
+      "type": "textOnly",
+      "description": "Together these four interfaces supply: a unified error dictionary (`IErrors`), standard token-metadata hooks (`IExpiry` & `IRates`), and a single governance entry-point (`Init`).  Because every major component depends on them, they form the glue that keeps the protocol’s many modules interoperating smoothly.",
+      "title": "",
+      "id": "32359"
+    }
+  ]
+}

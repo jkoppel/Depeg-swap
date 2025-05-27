@@ -1,0 +1,98 @@
+{
+  "title": "8.6: Pool Management – VaultPoolLib",
+  "id": "ceENOPBzM+ehw9OnB8QLf6h4rMNzKZqO6cFAYEgwosw=",
+  "originalId": 2747,
+  "position": 38,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Follow one batch of `RA` / `PA` as it becomes `AMM LP`, is later unwound, and finally booked back into withdrawal-pool reserves.  The helpers that make this possible live in `VaultPoolLib`; we will then watch how `VaultLib` calls them during issuance and LP liquidation.",
+      "title": "",
+      "id": "32794"
+    },
+    {
+      "type": "highlight",
+      "description": "`reserve()` receives fresh RA / PA (typically after LP liquidation) and:\n\n- uses `MathHelper.separateLiquidity` to split the total between withdrawal pool and AMM (lines 18-21 & 26-29)\n- stores the AMM share in `ammLiquidityPool.balance` and updates the per-LV exchange-rate the withdrawal pool must honour (lines 22-24 & 29-30)\n- asserts the split is loss-free (line 32-33)\n\nIn short, it keeps withdrawal accounting and future AMM provisioning in sync.",
+      "file": "contracts/libraries/VaultPoolLib.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "32795"
+    },
+    {
+      "type": "highlight",
+      "description": "`rationedToAmm()` converts the staged `AMM` balance into exact `RA` & `CT` amounts at the caller-supplied `CT` price ratio (line 42-43). It returns both tokens plus the original balance so the caller can track dust.",
+      "file": "contracts/libraries/VaultPoolLib.sol",
+      "highlight": [
+        {
+          "start": 35,
+          "end": 43
+        }
+      ],
+      "title": "",
+      "id": "32796"
+    },
+    {
+      "type": "highlight",
+      "description": "`resetAmmPool()` zeros `ammLiquidityPool.balance` once liquidity has been deposited, ensuring the next issuance starts with a clean slate.",
+      "file": "contracts/libraries/VaultPoolLib.sol",
+      "highlight": [
+        {
+          "start": 45,
+          "end": 47
+        }
+      ],
+      "title": "",
+      "id": "32797"
+    },
+    {
+      "type": "highlight",
+      "description": "`onNewIssuance()` runs whenever a new DS tranche is minted.  After guard clauses it calls `__provideAmmLiquidityFromPool()` (line 117) to consume the RA that `reserve()` previously parked in ammLiquidityPool.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 97,
+          "end": 118
+        }
+      ],
+      "title": "",
+      "id": "32798"
+    },
+    {
+      "type": "highlight",
+      "description": "**provideAmmLiquidityFromPool()**:  1️⃣ queries `pool.rationedToAmm()` for the RA/CT amounts to supply plus the original staged balance (`lines 303-304`);  2️⃣ feeds those tokens into the AMM, minting LP (`lines 309-311`);  3️⃣ calls `pool.resetAmmPool()` so the vault does not double-count that RA (`lines 313-314`).",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 293,
+          "end": 314
+        }
+      ],
+      "title": "",
+      "id": "32799"
+    },
+    {
+      "type": "highlight",
+      "description": "Later, when LP positions are unwound, `_redeemCtVault()` channels the redeemed CT + RA into `pool.reserve()` (line 524-525). `reserve()` then repeats its split-and-record routine, updating withdrawal-pool exchange-rates and refilling `ammLiquidityPool` for the next cycle.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 516,
+          "end": 526
+        }
+      ],
+      "title": "",
+      "id": "32800"
+    },
+    {
+      "type": "textOnly",
+      "description": "Lifecycle recap:\n\n* `reserve()` accumulates realised **RA/PA** and earmarks the **AMM** portion.\n\n* `onNewIssuance` → `__provideAmmLiquidityFromPool` turns that earmark into real **LP** and resets the balance.\n\n* When **LP** is cashed out, `_redeemCtVault` → `reserve()` books the proceeds back, refreshing withdrawal exchange-rates.\n\nThis loop keeps vault accounting and **AMM** liquidity perfectly aligned.",
+      "title": "",
+      "id": "32801"
+    }
+  ]
+}

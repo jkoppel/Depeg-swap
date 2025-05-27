@@ -1,0 +1,53 @@
+{
+  "title": "7.1: PSM – Peg-Stability-Module: Overview",
+  "id": "/ZzEFL7rY67sRwisyPW/+AMpctkkkTs/VDyjkg8Cn54=",
+  "originalId": 2732,
+  "position": 25,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "**The Peg-Stability-Module (PSM)** lives in five small **Solidity** files. This quick tour shows where each piece sits and the single job it performs.",
+      "title": "",
+      "id": "32568"
+    },
+    {
+      "type": "highlight",
+      "description": "**contracts/core/Psm.sol** — **thin façade**.\n\n`repurchase()` illustrates the pattern: fetch the pair’s `State` (50) then delegate to `PsmLibrary` (53); the wrapper itself stays logic-free.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 48,
+          "end": 55
+        }
+      ],
+      "title": "",
+      "id": "32571"
+    },
+    {
+      "type": "highlight",
+      "description": "`depositPsm()` repeats exactly the same load-and-delegate routine (91–93), underlining that every external entry point is just a forwarder.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 88,
+          "end": 93
+        }
+      ],
+      "title": "",
+      "id": "32574"
+    },
+    {
+      "type": "highlight",
+      "description": "`contracts/libraries/PsmLib.sol` — the engine room.\nThe library declaration and the `MAX_ALLOWED_FEES` constant (40) hint at the dense fee, redemption and rollover logic that fills the file.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 41
+        }
+      ],
+      "title": "",
+      "id": "32575"
+    }
+  ]
+}

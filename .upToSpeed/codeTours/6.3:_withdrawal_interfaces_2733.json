@@ -1,0 +1,111 @@
+{
+  "title": "6.3: Withdrawal Interfaces",
+  "id": "m46e0YohEou0gp5/4hhC9/N/aoigF1srZyfXuIMMwS4=",
+  "originalId": 2733,
+  "position": 24,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Withdrawals pivot around two tiny interfaces. We will look at the router-side view first, then the vault-side API, and finally a concrete implementation that ties them together.",
+      "title": "",
+      "id": "32494"
+    },
+    {
+      "type": "highlight",
+      "description": "The router receives assets as an array of minimal value objects.  **Lines 5-8** reveal the whole carrier: a token address and the amount – nothing more, keeping calldata gas-cheap and ABI-friendly.",
+      "file": "contracts/interfaces/IWithdrawalRouter.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 8
+        }
+      ],
+      "title": "",
+      "id": "32497"
+    },
+    {
+      "type": "highlight",
+      "description": "Routers implement a single hook.  `route(receiver, tokens, routerData)` hands over all funds and arbitrary metadata, letting each router decide what “processing the withdrawal” means.",
+      "file": "contracts/interfaces/IWithdrawalRouter.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 11
+        }
+      ],
+      "title": "",
+      "id": "32499"
+    },
+    {
+      "type": "highlight",
+      "description": "On the vault side three actions are exposed:  \n- `add` records a pending withdrawal and returns a deterministic id.  \n- `claimToSelf` sends the assets straight to the caller.  \n- `claimRouted` forwards them to any router, enabling swaps, bridges, or bundled payouts.",
+      "file": "contracts/interfaces/IWithdrawal.sol",
+      "highlight": [
+        {
+          "start": 7,
+          "end": 12
+        }
+      ],
+      "title": "",
+      "id": "32500"
+    },
+    {
+      "type": "highlight",
+      "description": "The two events make the flow observable: one when the request is lodged, one when it is successfully claimed. Indexes allow cheap filtering by `withdrawalId` or owner.",
+      "file": "contracts/interfaces/IWithdrawal.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 16
+        }
+      ],
+      "title": "",
+      "id": "32503"
+    },
+    {
+      "type": "highlight",
+      "description": "`IWithdrawal` inherits `IErrors`, so every public call shares the project-wide custom error vocabulary without redeclaring it.",
+      "file": "contracts/interfaces/IWithdrawal.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 7
+        }
+      ],
+      "title": "",
+      "id": "32504"
+    },
+    {
+      "type": "highlight",
+      "description": "`Withdrawal.sol` imports both interfaces, signalling that it fulfils the **vault API** and will interact with arbitrary routers.",
+      "file": "contracts/core/Withdrawal.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 6
+        }
+      ],
+      "title": "",
+      "id": "32506"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside the concrete contract the `WithdrawalInfo` struct embeds an array of `IWithdrawalRouter.Tokens`, showing the same lightweight container now living in persistent storage.",
+      "file": "contracts/core/Withdrawal.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 16
+        }
+      ],
+      "title": "",
+      "id": "32508"
+    },
+    {
+      "type": "textOnly",
+      "description": "That is the entire external surface: a **value container and router hook** on one side, and a **three-function / two-event vault interface** on the other, all wired together by the `Withdrawal` implementation.",
+      "title": "",
+      "id": "32534"
+    }
+  ]
+}

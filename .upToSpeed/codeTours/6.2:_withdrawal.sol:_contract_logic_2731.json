@@ -1,0 +1,66 @@
+{
+  "title": "6.2: Withdrawal.sol: Contract Logic",
+  "id": "K/doUiF+9CZHnXd6ht2F+/r51NDLpEekpQwcofScOWk=",
+  "originalId": 2731,
+  "position": 23,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "`Withdrawals` live in their own contract. They are created by the `Vault`, sit in a time-locked queue, and later become claimable either directly or through a `router`. We will follow that life-cycle step by step.",
+      "title": "",
+      "id": "32546"
+    },
+    {
+      "type": "highlight",
+      "description": "Storage layout: line 20 defines the immutable `Vault` address; line 22 maps a **withdrawal id** to its **packed information**; line 25 tracks a per-owner **nonce** used when generating unique ids in `add()`.",
+      "file": "contracts/core/Withdrawal.sol",
+      "highlight": [
+        {
+          "start": 18,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "32548"
+    },
+    {
+      "type": "highlight",
+      "description": "Three lightweight modifiers gate every external call:\n- `onlyVault` (34-39) – restricts queueing to the Vault.\n- `onlyOwner` (41-46) – ensures only the recorded owner may claim.\n- `onlyWhenClaimable` (48-53) – enforces the time-lock, comparing `claimableAt` to `block.timestamp`.",
+      "file": "contracts/core/Withdrawal.sol",
+      "highlight": [
+        {
+          "start": 34,
+          "end": 53
+        }
+      ],
+      "title": "",
+      "id": "32551"
+    },
+    {
+      "type": "highlight",
+      "description": "**add()** is invoked by the **Vault** once the **Vault** has already moved the tokens here.\n1. Line `65` sets `claimableAt = now + DELAY` (3 days).\n2. Line `69` generates a withdrawal id with `keccak256(WithdrawalInfo, nonce++)`, guaranteeing per-owner uniqueness.\n3. Lines `72-81` copy the struct and its token array into storage.\n4. Line `83` emits `WithdrawalRequested` so off-chain systems can start the timer.",
+      "file": "contracts/core/Withdrawal.sol",
+      "highlight": [
+        {
+          "start": 60,
+          "end": 84
+        }
+      ],
+      "title": "",
+      "id": "32552"
+    },
+    {
+      "type": "highlight",
+      "description": "First claiming route – `claimToSelf()`.  The header shows the shared defences: `nonReentrant`, `onlyOwner`, `onlyWhenClaimable`.",
+      "file": "contracts/core/Withdrawal.sol",
+      "highlight": [
+        {
+          "start": 86,
+          "end": 91
+        }
+      ],
+      "title": "",
+      "id": "32556"
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "title": "8.9: VaultLib – Early Redemption & Liquidation",
+  "id": "v5siYzdhTZVUr9dbpi2YcHwVHYXSiOEjVPePPe7abis=",
+  "originalId": 2751,
+  "position": 41,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Everything exits the strategy through `redeemEarlyLv`, so we begin there.",
+      "title": "",
+      "id": "32770"
+    },
+    {
+      "type": "highlight",
+      "description": "The function does only light work: pause-check, permit-sanity, then hands control to `states[id].redeemEarly` together with a bundle pointing at `Flash-Swap Router`, `AMM router` and the `Withdrawal contract`.",
+      "file": "contracts/core/Vault.sol",
+      "highlight": [
+        {
+          "start": 44,
+          "end": 60
+        }
+      ],
+      "title": "",
+      "id": "32771"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside the library: (1) zero-amount & supply sanity, (2) the optional `permit` signature is verified at lines 633-642 so the user can skip a prior approval, (3) the result `struct` is seeded.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 613,
+          "end": 643
+        }
+      ],
+      "title": "",
+      "id": "32772"
+    },
+    {
+      "type": "highlight",
+      "description": "Before touching balances the vault refreshes the NAV circuit-breaker (655-656).  The share of vault assets that corresponds to the LV being redeemed is then computed by `MathHelper.calculateRedeemLv`.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 655,
+          "end": 666
+        }
+      ],
+      "title": "",
+      "id": "32773"
+    },
+    {
+      "type": "highlight",
+      "description": "If that share contains LP the helper `__liquidateUnchecked` burns it on the AMM, pulling out the caller’s RA and CT and simultaneously reducing the vault’s LP balance.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 678,
+          "end": 686
+        }
+      ],
+      "title": "",
+      "id": "32774"
+    },
+    {
+      "type": "highlight",
+      "description": "Four independent output-minimum checks follow.  Any shortfall in `RA`, `CT`, `DS` or `PA` reverts – protecting users from slippage or stale quotes.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 689,
+          "end": 705
+        }
+      ],
+      "title": "",
+      "id": "32775"
+    },
+    {
+      "type": "highlight",
+      "description": "Book-keeping is now finalised: LV is burned, DS is released from the router reserve, and every owed token is packed into an array and pushed to `Withdrawal.add` – creating a 3-day time-locked claim.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 708,
+          "end": 734
+        }
+      ],
+      "title": "",
+      "id": "32776"
+    },
+    {
+      "type": "highlight",
+      "description": "`Withdrawal.add` stores the claim, sets `claimableAt = now + 3 days`, copies the token list and emits `WithdrawalRequested` – funds stay in the contract until the claimant calls `claimToSelf` or a routing variant.",
+      "file": "contracts/core/Withdrawal.sol",
+      "highlight": [
+        {
+          "start": 59,
+          "end": 85
+        }
+      ],
+      "title": "",
+      "id": "32777"
+    },
+    {
+      "type": "textOnly",
+      "description": "That completes the normal early-redemption path.  The next sequence runs only once per DS cycle, just after expiry.",
+      "title": "",
+      "id": "32778"
+    },
+    {
+      "type": "highlight",
+      "description": "`onNewIssuance` calls `_liquidateIfExpired`. If the previous `DS` is expired and its `LP` not yet processed the vault proceeds to full liquidation.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 120,
+          "end": 132
+        }
+      ],
+      "title": "",
+      "id": "32779"
+    },
+    {
+      "type": "highlight",
+      "description": "`_liquidatedLp` does the heavy lifting: all vault LP is redeemed into `RA` + `CT` (lines 510-511) and the `DS` is flagged to prevent repetition.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 493,
+          "end": 512
+        }
+      ],
+      "title": "",
+      "id": "32780"
+    },
+    {
+      "type": "highlight",
+      "description": "**_redeemCtVault** swaps the CT portion in the PSM for extra RA and PA, then locks those proceeds in the vault’s reserve pool to be paid out via future withdrawals.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 516,
+          "end": 525
+        }
+      ],
+      "title": "",
+      "id": "32781"
+    },
+    {
+      "type": "textOnly",
+      "description": "Key points:\n- User path = `redeemEarlyLv → VaultLib.redeemEarly → Withdrawal`.\n- Guards: pause flags, permit verification, NAV circuit-breaker update, four min-output checks.\n- LP is liquidated and DS drained at withdrawal time; tokens leave via the timelocked `Withdrawal` contract.\n- When a DS expires, admin liquidation converts the strategy to pure RA/PA through `_liquidatedLp` and `_redeemCtVault`, ensuring later redemptions stay straightforward.",
+      "title": "",
+      "id": "32782"
+    }
+  ]
+}

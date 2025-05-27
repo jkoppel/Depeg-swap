@@ -1,0 +1,162 @@
+{
+  "title": "11.8: ReturnDataSlot & Cross-Function State Passing",
+  "id": "ba5dycBzQNm3At1CsTjSpJpGLFUwu/eNPcAa+jLSAFM=",
+  "originalId": 2830,
+  "position": 59,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Many swap-related functions must surface several pieces of data – how many tokens ended up with the trader, how much was refunded, the flash-swap fee, … – even though every value is produced in a different helper several calls deep.\n\nThreading all of them up the call-graph would trigger Solidity’s infamous **stack-too-deep** error and waste gas. This codebase adopts an explicit **return-slot pattern** instead: nested helpers publish partial results into `EIP-1153` transient storage, top-level functions read the slots, and a `modifier` wipes everything afterwards.",
+      "title": "",
+      "id": "33833"
+    },
+    {
+      "type": "highlight",
+      "description": "Four deterministic **32-byte** identifiers act as keys. Being `keccak` hashes of short labels keeps them unique and self-descriptive.",
+      "file": "contracts/libraries/ReturnDataSlotLib.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "33834"
+    },
+    {
+      "type": "highlight",
+      "description": "`increase`, `get`, and `clear` are one-liners around `tstore` / `tload`. They behave like a per-transaction key-value cache: cheap writes, cheaper reads, nothing persists beyond the transaction unless the contract chooses to copy the value elsewhere.",
+      "file": "contracts/libraries/ReturnDataSlotLib.sol",
+      "highlight": [
+        {
+          "start": 17,
+          "end": 38
+        }
+      ],
+      "title": "",
+      "id": "33835"
+    },
+    {
+      "type": "textOnly",
+      "description": "With those helpers any leaf function can `publish` its numeric result without altering its own signature or every parent signature.",
+      "title": "",
+      "id": "33836"
+    },
+    {
+      "type": "highlight",
+      "description": "The `autoClearReturnData` modifier guarantees a clean slate: it is inserted at every external user entry-point, runs the body (`_`), then zeroes all slots so the next call starts fresh even if it happens inside the same transaction.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 110,
+          "end": 116
+        }
+      ],
+      "title": "",
+      "id": "33837"
+    },
+    {
+      "type": "highlight",
+      "description": "`swapRaforDs` – one of the public swap functions – is annotated with the **modifier**. The pattern repeats on every other user-facing swap function so callers never have to worry about manual clean-up.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 451,
+          "end": 460
+        }
+      ],
+      "title": "",
+      "id": "33838"
+    },
+    {
+      "type": "highlight",
+      "description": "Selling direction (`swapDsforRa`) uses the same modifier, confirming the convention across the **API**.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 537,
+          "end": 545
+        }
+      ],
+      "title": "",
+      "id": "33839"
+    },
+    {
+      "type": "highlight",
+      "description": "Top-level helper `_swapRaForDsTopLevel` assembles the return struct.  Lines 491-499 fetch every component directly from the slots – no need to pass them through the many helpers that produced them.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 489,
+          "end": 500
+        }
+      ],
+      "title": "",
+      "id": "33840"
+    },
+    {
+      "type": "highlight",
+      "description": "The mirror helper for the sell path reads `RETURN_SLOT_SELL` the same way.  Again, only one read regardless of how many sub-calls contributed.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 558,
+          "end": 574
+        }
+      ],
+      "title": "",
+      "id": "33841"
+    },
+    {
+      "type": "highlight",
+      "description": "Deep in the buy flow, rollover logic credits DS obtained from the reserve.  It doesn’t return the value – it simply `increase`s `RETURN_SLOT_BUY`.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 342,
+          "end": 349
+        }
+      ],
+      "title": "",
+      "id": "33842"
+    },
+    {
+      "type": "highlight",
+      "description": "`__afterFlashswapBuy` later receives CT repayments from the PSM, refunds any excess CT, then:\n- line 725 accumulates the refund into `REFUNDED_SLOT`,\n- line 734 adds the final DS amount into `RETURN_SLOT_BUY`.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 720,
+          "end": 735
+        }
+      ],
+      "title": "",
+      "id": "33843"
+    },
+    {
+      "type": "highlight",
+      "description": "On the selling path `__afterFlashswapSell` finishes by adding the RA delivered to the trader into `RETURN_SLOT_SELL` (line 768-769).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 758,
+          "end": 769
+        }
+      ],
+      "title": "",
+      "id": "33844"
+    },
+    {
+      "type": "textOnly",
+      "description": "Putting it together:\n- every nested helper adds its own contribution with `increase()`;\n- the outermost helper reads the final tallies with `get()`;\n- `autoClearReturnData` zeroes the slots afterwards, readying them for the next external call.",
+      "title": "",
+      "id": "33845"
+    },
+    {
+      "type": "textOnly",
+      "description": "Why it matters\n- avoids \"stack-too-deep\" – three or four return variables disappear from every intermediate frame;\n- lowers memory copying – each figure is written once and read once irrespective of call depth;\n- leverages **EIP-1153**: `TSTORE ≈ 30 gas`, `TLOAD ≈ 3 gas`, refunded automatically at the end of the transaction.\n\nArmed with this pattern you can trace multi-step swaps confidently: search for `ReturnDataSlotLib.increase` to discover where a figure originates, `get` to see where it is consumed, knowing slots are reset between user calls.",
+      "title": "",
+      "id": "33846"
+    }
+  ]
+}

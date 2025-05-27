@@ -1,0 +1,85 @@
+{
+  "title": "8.5: Accounting Basics – VaultBalancesLib",
+  "id": "ZNgTNbGKWtpPqeJ2sgklg4hl++Y71S2JsKyyZFxi9Qs=",
+  "originalId": 2746,
+  "position": 37,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This tour follows the single counter that tells the `Liquidity-Vault (LV)` how many `AMM-LP` tokens it owns.  We track where the figure is stored, when deposits add to it, when redemptions subtract from it, and how `NAV` & share equations consume it.",
+      "title": "",
+      "id": "32841"
+    },
+    {
+      "type": "highlight",
+      "description": "Deposit flow – once the AMM returns `lp`, line 290 books it with `addLpBalance`. From this moment **NAV maths** can trust the counter.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 283,
+          "end": 291
+        }
+      ],
+      "title": "",
+      "id": "32847"
+    },
+    {
+      "type": "highlight",
+      "description": "Deposit flow – once the AMM returns `lp`, line 290 books it with `addLpBalance`. From this moment NAV maths can trust the counter.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 283,
+          "end": 291
+        }
+      ],
+      "title": "",
+      "id": "32844"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside `__liquidateUnchecked` the LP is burned and immediately removed from accounting with `subtractLpBalance`.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 484,
+          "end": 490
+        }
+      ],
+      "title": "",
+      "id": "32854"
+    },
+    {
+      "type": "highlight",
+      "description": "After balances are updated, `LV shares` are burned—keeping supply aligned with asset pool.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 707,
+          "end": 708
+        }
+      ],
+      "title": "",
+      "id": "32855"
+    },
+    {
+      "type": "highlight",
+      "description": "`MathHelper.calculateNavCombined` converts the vault’s LP holding into RA & CT value (lines 267-272) and adds idle RA (line 273) – the three pieces used to price the vault.",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 262,
+          "end": 276
+        }
+      ],
+      "title": "",
+      "id": "32859"
+    },
+    {
+      "type": "textOnly",
+      "description": "**Key points**\n- `vault.balances.lpBalance` is the single source of truth for the **AMM** position.\n- Deposits add through `addLpBalance`; redemptions & epoch liquidation subtract through `subtractLpBalance`.\n- **NAV** maths converts `LP` → `RA`/`CT` (plus held `CT`/`DS` and idle `RA`) before dividing by share supply, so the counter feeds directly into every share price and circuit-breaker check.",
+      "title": "",
+      "id": "32860"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "title": "11.3: RA → DS Buy Flow",
+  "id": "J0KX/zFo1Fjufyuq80B3B3XW5900QjqZabmOZxt3BmQ=",
+  "originalId": 2817,
+  "position": 54,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "We will trace every step executed when someone turns the `redemption asset (RA)` into `DS`. By the end you should be able to follow the tokens, understand when **rollover inventory** is used, how a **flash-swap** completes the trade, and why extra `DS` might be sold from **reserve**.",
+      "title": "",
+      "id": "33651"
+    },
+    {
+      "type": "highlight",
+      "description": "The public entry point validates the `EIP-2612` permit.  A missing signature / deadline (461-463) or a non-permit RA (467-469) reverts immediately.  When both checks pass the permit is executed (471-472) and control moves to `_swapRaForDsTopLevel` (473-474).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 451,
+          "end": 474
+        }
+      ],
+      "title": "",
+      "id": "33652"
+    },
+    {
+      "type": "highlight",
+      "description": "`_swapRaForDsTopLevel` pulls the user’s `RA` (487), delegates to the internal routine (489) and then reads how much `DS` was produced (491).  It reverts on slippage (494-496), records `CT` refunds & fees (498-500), runs reserve-sale logic (503-505), updates price metrics (507-508) and finally emits `RaSwapped` with full accounting (509-518).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 476,
+          "end": 520
+        }
+      ],
+      "title": "",
+      "id": "33653"
+    },
+    {
+      "type": "highlight",
+      "description": "`_swapRaforDs` first offers a rollover sale (342).  Any `DS` filled this way is stored in `RETURN_SLOT_BUY` (345); if the order is already satisfied it exits early (348-350).  Otherwise it computes the `CT` borrow size via on-chain math (354-357) or an off-chain hint (358-361) and triggers a `Cork` flash-swap that will deliver the remaining `DS` (363-364).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 331,
+          "end": 365
+        }
+      ],
+      "title": "",
+      "id": "33654"
+    },
+    {
+      "type": "highlight",
+      "description": "`_swapRaForDsViaRollover` decides how much reserve DS can be sold.  `SwapperMathLib.calculateRolloverSale` (300-302) returns DS received, profits, and reserve usage.  Profits are split: PSM share goes to `IPSMcore.psmAcceptFlashSwapProfit` (316) and Vault share to `IVault.lvAcceptRolloverProfit` (317).  DS is transferred straight to the buyer (319) and `RolloverSold` logs the action (322-323).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 272,
+          "end": 325
+        }
+      ],
+      "title": "",
+      "id": "33655"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateAndSellDsReserve` may trigger a gradual sale of DS from reserve. It asks `calculateSellFromReserve` how much to unload (391-392), skips dust (394-396) and calls `_sellDsReserve` when the threshold is met (398-399).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 383,
+          "end": 399
+        }
+      ],
+      "title": "",
+      "id": "33656"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateSellFromReserve` determines **sell-pressure** (408) and caps the sale to what is actually held (412-416), ensuring reserve health while accommodating demand.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 401,
+          "end": 417
+        }
+      ],
+      "title": "",
+      "id": "33657"
+    },
+    {
+      "type": "highlight",
+      "description": "When the borrow size is calculated on-chain, `getAmountOutBuyDs` calls the `AMM` for an exact quote.  Any unhealthy pool or near-expiry triggers `InvalidPoolStateOrNearExpired` (378-379) to protect users.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 367,
+          "end": 381
+        }
+      ],
+      "title": "",
+      "id": "33658"
+    },
+    {
+      "type": "textOnly",
+      "description": "Putting it together:\n1. Permit verified, `RA` allowance granted.\n2. Router pulls `RA`, attempts rollover.\n3. Remaining demand is filled via flash-swap: `RA` + borrowed `CT` enters `PSM`, `DS` comes back, `CT` is repaid, excess `CT` refunded.\n4. Profits flow to `PSM` & `Vault`; reserve-sale may dampen price pressure; `HIYA` updates.\n5. `RaSwapped` records every number and the user now holds `DS`.",
+      "title": "",
+      "id": "33659"
+    }
+  ]
+}

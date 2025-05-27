@@ -1,0 +1,169 @@
+{
+  "title": "9.3: AssetFactory Internals & Registry APIs",
+  "id": "7MCwMwfAlkiGR2ojK9xPjDGxRCetrltwjxBke5sepO8=",
+  "originalId": 2754,
+  "position": 45,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Walk through every moving part of `AssetFactory`: the hard-coded limits, deterministic symbol logic, on-chain registries, and the two deployment entry points that ultimately mint `CT`, `DS`, and `LV` tokens.",
+      "title": "",
+      "id": "32827"
+    },
+    {
+      "type": "highlight",
+      "description": "`MAX_LIMIT` (10) caps user-requested page sizes, while `CT_PREFIX` / `DS_PREFIX` / `LV_PREFIX` are baked into every symbol.  The solitary counter `idx` is incremented once per `RA-PA` pair so each Pair occupies a predictable slot in `pairs`.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 28
+        }
+      ],
+      "title": "",
+      "id": "32828"
+    },
+    {
+      "type": "highlight",
+      "description": "SwapPair simply stores the freshly-minted `CT` & `DS` addresses.  The surrounding mappings form five distinct registries:\n- `lvs`          – Pair-Id → LV token.\n- `pairs`        – sequential index → Pair metadata (used for cheap pagination).\n- `swapAssets`   – Pair-Id → dynamic list of SwapPair structs.\n- `deployed`     – quick lookup for **\"is this address factory-born?\"**.\n- `variantIndex` – global counter per baseSymbol.\n- `variantIndexPair` – once a Pair claims a variant number it is pinned here for all future CT/DS/LV deployments.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 29,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "32829"
+    },
+    {
+      "type": "highlight",
+      "description": "`PairLibrary.toId` hashes the full tuple (`pa`, `ra`, `initialArp`, `expiryInterval`, `exchangeRateProvider`) into a deterministic `bytes32` **Id** — every registry key inside the factory uses this value.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 37,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "32830"
+    },
+    {
+      "type": "highlight",
+      "description": "`_generateVariant` checks whether the **Pair** already owns a numeric suffix. If not, it increments the per-symbol counter and stores the result in `variantIndexPair[id]`, ensuring the same **Pair** always reuses the same variant number.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 49,
+          "end": 59
+        }
+      ],
+      "title": "",
+      "id": "32831"
+    },
+    {
+      "type": "highlight",
+      "description": "`_generateSymbolWithVariant` then composes the final **ERC-20** symbol:\n1. grab underlying PA symbol (`wstETH`).\n2. insert month number or \"!\" for perpetual tokens.\n3. add the `CT` / `DS` / `LV` prefix.\n4. call `_generateVariant` to append the stable numeric suffix.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 60,
+          "end": 71
+        }
+      ],
+      "title": "",
+      "id": "32832"
+    },
+    {
+      "type": "textOnly",
+      "description": "Example – First CT for `wstETH/USDC`, March expiry:\n`baseSymbol` = `\"wstETH03CT\"` ➜ `variantIndex` bumps 0→1 ➜ `symbol` = `\"wstETH03CT-1\"`.\nA later DS for the same Pair reuses variant 1 → `\"wstETH03DS-1\"` – the suffix stays fixed.",
+      "title": "",
+      "id": "32833"
+    },
+    {
+      "type": "highlight",
+      "description": "Safety & access modifiers:\n- `withinLimit` – rejects any pagination request above 10.\n- `onlyModuleCore` – only the trusted `ModuleCore` contract may mint new tokens.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 81,
+          "end": 93
+        }
+      ],
+      "title": "",
+      "id": "32834"
+    },
+    {
+      "type": "highlight",
+      "description": "`getDeployedAssets` slices the pseudo-array `pairs` using start = `page×limit`, end = `min(idx, start+limit)`. For each slot it returns the RA address from the Pair and the corresponding LV from `lvs`.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 119,
+          "end": 148
+        }
+      ],
+      "title": "",
+      "id": "32835"
+    },
+    {
+      "type": "highlight",
+      "description": "`getDeployedSwapAssets` performs identical slicing inside `swapAssets[id]`, handing back parallel arrays of **CT** and **DS** addresses.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 159,
+          "end": 190
+        }
+      ],
+      "title": "",
+      "id": "32836"
+    },
+    {
+      "type": "highlight",
+      "description": "`deploySwapAssets` (`ModuleCore` only):\n1. Validate non-zero `psmExchangeRate` and that an `LV` already exists for the `Pair`.\n2. Compute `expiry = now + interval` and derive the `Pair Id`.\n3. Mint a new `CT` followed by `DS`, each with its generated symbol, then wire them to `moduleCore` and their `marketId`.\n4. Append the `SwapPair` to `swapAssets[id]`, tag both addresses as `deployed`, and emit `AssetDeployed`.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 192,
+          "end": 247
+        }
+      ],
+      "title": "",
+      "id": "32837"
+    },
+    {
+      "type": "highlight",
+      "description": "`deployLv` (ModuleCore only):\n1. Build the LV symbol (no expiry component).\n2. Mint the Asset, set marketId & moduleCore.\n3. Record the Pair in `pairs[idx++]`, store lv in `lvs[marketId]`, then emit `LvAssetDeployed`.\nOnly after this step is the Pair eligible for CT/DS deployments.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 256,
+          "end": 282
+        }
+      ],
+      "title": "",
+      "id": "32838"
+    },
+    {
+      "type": "highlight",
+      "description": "Upgradability & admin:\n- `_authorizeUpgrade` is intentionally empty but restricted to the owner, satisfying **UUPS** requirements.\n- `setModuleCore` lets the owner swap the ModuleCore reference, with an event emitted for off-chain watchers.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 284,
+          "end": 293
+        }
+      ],
+      "title": "",
+      "id": "32839"
+    },
+    {
+      "type": "textOnly",
+      "description": "You can now trace every state mutation:\n1. LV first – records the Pair & variant number.\n2. Multiple CT/DS follow – reuse that variant and extend `swapAssets[id]`.\n3. Pagination helpers read back these arrays under the `MAX_LIMIT` cap.\n4. Only `ModuleCore` can trigger deployments, while `UUPS` keeps the factory upgrade-ready without touching its storage layout.",
+      "title": "",
+      "id": "32840"
+    }
+  ]
+}

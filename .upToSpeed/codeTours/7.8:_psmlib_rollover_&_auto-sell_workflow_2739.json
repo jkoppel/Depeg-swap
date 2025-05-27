@@ -1,0 +1,86 @@
+{
+  "title": "7.8: PsmLib Rollover & Auto-Sell Workflow",
+  "id": "3NHcJarC/qY3iB9zx4utojtU6MoEW/E1QwDTovUOaBk=",
+  "originalId": 2739,
+  "position": 32,
+  "steps": [
+    {
+      "type": "highlight",
+      "description": "`rolloverExpiredCt` is the public gateway.\n- 104-107 optionally calls `permit` so the library can move the user's expired CT.\n- 110 forwards to the internal routine together with the `FlashSwap` router so downstream code knows where any fresh `DS` should be sent.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 95,
+          "end": 112
+        }
+      ],
+      "title": "",
+      "id": "32674"
+    },
+    {
+      "type": "highlight",
+      "description": "The author left a numbered checklist (1-7).  Each item will be matched to real code in the next slides.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 127,
+          "end": 135
+        }
+      ],
+      "title": "",
+      "id": "32675"
+    },
+    {
+      "type": "highlight",
+      "description": "`_rolloverExpiredCt` – outer skeleton\n143-150: input guards.\n1⃣ 156-157 calls `_claimCtForRollover` – harvest what the expired CT represents.\n2⃣ 159-170 turns that backing RA into new-epoch balances plus CT/DS amounts.\n3⃣ 172-174 asks `_incRolloverClaims` whether DS go to the user or into the reserve.\n4-7⃣ 176-177 finishes in `_afterRollover` – mint/burn/transfer the actual tokens.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 136,
+          "end": 178
+        }
+      ],
+      "title": "",
+      "id": "32677"
+    },
+    {
+      "type": "highlight",
+      "description": "`_claimCtForRollover` (step 1)\n- 202-204 verifies the **wallet** owns the requested **CT**.\n- 206-215 snapshots separated liquidity, calculates proportional **RA** & **PA**, books balances.\n- 219 burns the expired **CT** so supply cannot be reused.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 195,
+          "end": 221
+        }
+      ],
+      "title": "",
+      "id": "32682"
+    },
+    {
+      "type": "highlight",
+      "description": "**claimAutoSellProfit** – a thin wrapper\n- 120-122 rejects zero amount.\n- 124-125 hands control to `_claimAutoSellProfit` with the correct `poolArchive` and `router`.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 113,
+          "end": 126
+        }
+      ],
+      "title": "",
+      "id": "32691"
+    },
+    {
+      "type": "highlight",
+      "description": "`_claimAutoSellProfit` – reserve emptying & profit attribution\n1. 230-232 checks the caller’s credit.\n2. 234-240 computes how many `DS` are still parked and tells the `router` to release that slice.\n3. 243-248 calculates the caller’s share of `rolloverProfit` (denominated in `RA`), converts native decimals, and transfers it.\n4. 250-256 updates `archive fields` so the claim cannot be reused.\n5. 259-262 passes any unsold `DS` back to the wallet.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 222,
+          "end": 263
+        }
+      ],
+      "title": "",
+      "id": "32693"
+    }
+  ]
+}

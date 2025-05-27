@@ -1,0 +1,189 @@
+{
+  "title": "11.6: DsFlashSwap Library Essentials",
+  "id": "ZHQsCFumdLkCRMHr7lYXrG1zHynwcRGSIoWN3yIjRzU=",
+  "originalId": 2820,
+  "position": 57,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This walkthrough focuses on the data structures that back every call to `reserves[id]` in the flash-swap router.  We will inspect how an `AssetPair` is stored, how **HIYA** metrics are updated, and which helper functions the router taps for pricing and reserve information.",
+      "title": "",
+      "id": "33806"
+    },
+    {
+      "type": "highlight",
+      "description": "`AssetPair` groups the three tokens that form a DS market plus two vault-side reserves:\n- `ra` (redeemable), `ct` (collateral), `ds` (depeg synthetic)\n- `lvReserve` and `psmReserve` hold DS held by the Liquidity Vault and the PSM. A fresh struct is created for every new `dsId`.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 16,
+          "end": 27
+        }
+      ],
+      "title": "",
+      "id": "33807"
+    },
+    {
+      "type": "highlight",
+      "description": "`ReserveState` is the value stored in `reserves[id]` inside the router.\n- `ds` is a mapping `dsId ⇒ AssetPair`; any expression such as `reserves[id].ds[dsId]` drills down to one of the structs above.\n- The surrounding fields keep track of HIYA accumulation, sell-pressure thresholds, rollover windows, extra fee settings and toggles.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 32,
+          "end": 45
+        }
+      ],
+      "title": "",
+      "id": "33808"
+    },
+    {
+      "type": "highlight",
+      "description": "`FIRST_ISSUANCE` is a sentinel (`1`) used to skip ARP calculations on the very first DS issuance.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 55,
+          "end": 56
+        }
+      ],
+      "title": "",
+      "id": "33809"
+    },
+    {
+      "type": "highlight",
+      "description": "`onNewIssuance` writes a brand-new `AssetPair` into the `ds` mapping and, when it is _not_ the first issuance, converts the cumulative HIYA metrics into a single `hiya` value then resets the counters.  This finalises the previous epoch.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 57,
+          "end": 70
+        }
+      ],
+      "title": "",
+      "id": "33810"
+    },
+    {
+      "type": "highlight",
+      "description": "HIYA lifecycle within `ReserveState`:\n- `getEffectiveHIYA()` returns the stored value used by other modules.\n- `recalculateHIYA()` is called after **every swap**; it increments the cumulative variables that will become the next `hiya` at issuance.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 90,
+          "end": 111
+        }
+      ],
+      "title": "",
+      "id": "33811"
+    },
+    {
+      "type": "highlight",
+      "description": "`getPriceRatio()` fetches live AMM reserves via the router’s hook, normalises for token decimals, then delegates to `SwapperMathLibrary` for the RA/CT price ratio.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 155,
+          "end": 168
+        }
+      ],
+      "title": "",
+      "id": "33812"
+    },
+    {
+      "type": "highlight",
+      "description": "`getReserve()` is a lighter helper returning raw RA and CT reserves from the AMM. The router exposes this directly as `getAmmReserve`.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 170,
+          "end": 178
+        }
+      ],
+      "title": "",
+      "id": "33813"
+    },
+    {
+      "type": "highlight",
+      "description": "Seller-side preview: `getAmountOutSellDS` (storage `AssetPair`). It returns `(amountOut, repaymentAmount, success)` and is the router’s first checkpoint before a DS→RA flash-swap.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 208,
+          "end": 214
+        }
+      ],
+      "title": "",
+      "id": "33814"
+    },
+    {
+      "type": "highlight",
+      "description": "**Buyer-side preview:** `getAmountOutBuyDS` (calldata `AssetPair`).  It returns the DS output _and_ the RA that must be flash-borrowed, letting the router size its loan accurately.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 224,
+          "end": 233
+        }
+      ],
+      "title": "",
+      "id": "33815"
+    },
+    {
+      "type": "highlight",
+      "description": "Router view `getAmmReserve` simply forwards to the library helper, so the data flow is: Router storage → `ReserveState` → `AssetPair` addresses → AMM hook.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 210,
+          "end": 215
+        }
+      ],
+      "title": "",
+      "id": "33816"
+    },
+    {
+      "type": "highlight",
+      "description": "The same delegation pattern for price ratios: `Router` → `ReserveState.getPriceRatio` → library `math`.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 252,
+          "end": 259
+        }
+      ],
+      "title": "",
+      "id": "33817"
+    },
+    {
+      "type": "highlight",
+      "description": "Before a DS→RA trade the router calls `assetPair.getAmountOutSellDS(...)`.  A failure or `success == false` aborts the operation.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 603,
+          "end": 608
+        }
+      ],
+      "title": "",
+      "id": "33818"
+    },
+    {
+      "type": "highlight",
+      "description": "Mirror flow for RA→DS: `_swapRaforDs` relies on `assetPair.getAmountOutBuyDS(...)` to compute expected DS output and the necessary flash-borrow.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 368,
+          "end": 378
+        }
+      ],
+      "title": "",
+      "id": "33819"
+    },
+    {
+      "type": "textOnly",
+      "description": "Whenever you see `reserves[id].ds[dsId]` in router code you now know:\n1  `reserves` is the mapping `Id → ReserveState` in router storage.\n2  `.ds[dsId]` fetches the per-issuance `AssetPair` created by `onNewIssuance`.\n3  All pricing, reserve and HIYA reads are funnelled through the helper functions we just examined.",
+      "title": "",
+      "id": "33820"
+    }
+  ]
+}

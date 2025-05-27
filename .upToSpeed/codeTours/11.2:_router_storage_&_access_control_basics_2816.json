@@ -1,0 +1,98 @@
+{
+  "title": "11.2: Router Storage & Access Control Basics",
+  "id": "uJUwliXhu32xohjKPffPhfBeiuO/wYNCEkdb7pO9lLQ=",
+  "originalId": 2816,
+  "position": 53,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "The router keeps just a handful of values in **contract storage**. Once you know where they live and which roles are allowed to mutate them, everything else in the file becomes much easier to reason about.",
+      "title": "",
+      "id": "33632"
+    },
+    {
+      "type": "highlight",
+      "description": "Key storage slots live right after the **\"using\"** directives:\n- lines 40-42 introduce the custom `AccessControl` role identifiers.\n- line 44 caps DS fees at **30%**.\n- lines 46-49 are the mutable pointers: the `ModuleCore` address, the `Uni V4` hook, the `CorkConfig` proxy, and the mapping that stores every `ReserveState`.\nNo other state variables appear elsewhere in the contract, so any function that wants to change liquidity, fees, or hooks must eventually write to one of these fields.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 36,
+          "end": 50
+        }
+      ],
+      "title": "",
+      "id": "33633"
+    },
+    {
+      "type": "highlight",
+      "description": "During a flash-swap the router encodes this `CallbackData` payload for the hook.\nIt carries just enough context for settlement:\n- `buyDs` flag identifies the direction (RA→DS or DS→RA)\n- `caller` is the original trader\n- `borrowed` / `provided` record the flash-loan and user-supplied amounts\n- `reserveId` / `dsId` point back to the correct ReserveState",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 74,
+          "end": 83
+        }
+      ],
+      "title": "",
+      "id": "33634"
+    },
+    {
+      "type": "highlight",
+      "description": "Access control is enforced by three tiny modifiers that wrap OpenZeppelin's `AccessControlUpgradeable`:\n- `onlyDefaultAdmin` → `DEFAULT_ADMIN_ROLE` (granted once during initialise).\n- `onlyModuleCore`  → `MODULE_CORE` (can be reassigned by the admin).\n- `onlyConfig`      → `CONFIG` (hard-wired to the governance proxy).\nEvery mutating function later in the file is guarded by one of these checks, so knowing who holds a role tells you exactly who can touch storage.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 89,
+          "end": 108
+        }
+      ],
+      "title": "",
+      "id": "33635"
+    },
+    {
+      "type": "highlight",
+      "description": "Initial role setup happens in two steps:\n1. The `constructor` permanently disables further initialisers – a standard UUPS safety measure.\n2. `initialize()` grants `DEFAULT_ADMIN` to the deployer and `CONFIG` to the `CorkConfig` contract that governs parameters.\n3. `_authorizeUpgrade()` re-uses `onlyDefaultAdmin`, so upgrades require the same admin key.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 118,
+          "end": 131
+        }
+      ],
+      "title": "",
+      "id": "33636"
+    },
+    {
+      "type": "highlight",
+      "description": "The admin can later wire the router into the rest of the system:\n- `setModuleCore()` records the ModuleCore address and assigns it the MODULE_CORE role in one call.\n- `updateReserveSellPressurePercentage()` (178-182, partly visible below) is a **CONFIG-only** tuning knob—an example of how operational parameters are delegated.\n- `setHook()` lets the admin swap in a new Uni V4 hook; no other role may change it.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 168,
+          "end": 186
+        }
+      ],
+      "title": "",
+      "id": "33637"
+    },
+    {
+      "type": "highlight",
+      "description": "Other **CONFIG-only** setters tweak per-reserve behaviour.\n`updateDsExtraFeePercentage()` (145-149) shows a hard safety check: if the caller tries to set a fee above `MAX_DS_FEE` (30%), the call reverts.\nBecause each of these functions writes directly into the `reserves` mapping, their impact is confined to a single reserve.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 133,
+          "end": 158
+        }
+      ],
+      "title": "",
+      "id": "33638"
+    },
+    {
+      "type": "textOnly",
+      "description": "Putting it all together:\n- `DEFAULT_ADMIN` controls upgrades, the `ModuleCore` address, and the hook pointer.\n- `CONFIG` (the governance proxy) controls economic parameters inside each `ReserveState`.\n- `MODULE_CORE` can mint reserves and move liquidity but cannot tweak global settings.\nNo other address can write to storage, so as long as the admin key is protected and `CONFIG` governance is monitored, the router's state—and therefore the flash-swap logic—remains well-protected.",
+      "title": "",
+      "id": "33639"
+    }
+  ]
+}

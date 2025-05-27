@@ -1,0 +1,215 @@
+{
+  "title": "2.4: ModuleCore Initialisation API",
+  "id": "Box837fjzZREHE+r4zvcasEAZQPNrYYqWamCZSUgolE=",
+  "originalId": 2708,
+  "position": 5,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This guided tour unpacks every governance-facing function in `contracts/interfaces/Init.sol` and shows how a deterministic **Pair Id** threads through the API, how markets are bootstrapped, tweaked, and how lifecycle events are broadcast.",
+      "title": "",
+      "id": "32253"
+    },
+    {
+      "type": "highlight",
+      "description": "Right at the top `Init.sol` pulls in `Id` and `Pair` – a reminder that everything a governor touches is ultimately keyed by the hash-derived `Pair Id`.",
+      "file": "contracts/interfaces/Init.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 5
+        }
+      ],
+      "title": "",
+      "id": "32254"
+    },
+    {
+      "type": "highlight",
+      "description": "`Pair.sol` declares `type Id is bytes32;` and the five-field Pair struct (`pa`, `ra`, `initialArp`, `expiryInterval`, `exchangeRateProvider`) that is later ABI-encoded to generate that Id.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 6,
+          "end": 12
+        }
+      ],
+      "title": "",
+      "id": "32255"
+    },
+    {
+      "type": "highlight",
+      "description": "The `toId` helper hashes the struct; the result is immutable and deterministic, so off-chain code can re-compute it without touching state.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 37,
+          "end": 41
+        }
+      ],
+      "title": "",
+      "id": "32256"
+    },
+    {
+      "type": "highlight",
+      "description": "First governance entry-point – `initializeModuleCore`. Parameters map one-to-one with the `Pair struct`, plus `expiryInterval` which seeds DS scheduling.",
+      "file": "contracts/interfaces/Init.sol",
+      "highlight": [
+        {
+          "start": 20,
+          "end": 26
+        }
+      ],
+      "title": "",
+      "id": "32257"
+    },
+    {
+      "type": "highlight",
+      "description": "The implementation checks `config rights`, rejects zero expiry, builds a `Pair`, converts it to an `Id`, and aborts if the `market` already exists.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 100,
+          "end": 108
+        }
+      ],
+      "title": "",
+      "id": "32258"
+    },
+    {
+      "type": "highlight",
+      "description": "It then deploys the `LV token`, initialises `PSM` & `Vault` libraries, and emits the `InitializedModuleCore` event – the moment indexers learn a brand-new market is live.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 114,
+          "end": 122
+        }
+      ],
+      "title": "",
+      "id": "32259"
+    },
+    {
+      "type": "highlight",
+      "description": "`issueNewDs` brings the next DS/CT pair to life.  `Governance` supplies policy knobs: **daily decay**, **rollover period in blocks**, and the **AMM-liquidation deadline**.",
+      "file": "contracts/interfaces/Init.sol",
+      "highlight": [
+        {
+          "start": 32,
+          "end": 38
+        }
+      ],
+      "title": "",
+      "id": "32260"
+    },
+    {
+      "type": "highlight",
+      "description": "`ModuleCore` guards the call, fetches the latest oracle rate, and asks the factory to mint fresh swap assets.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 124,
+          "end": 132
+        }
+      ],
+      "title": "",
+      "id": "32261"
+    },
+    {
+      "type": "highlight",
+      "description": "Next it programs the router with the `decay` & `rollover` settings and cues `Vault` logic — all in the same transaction so downstream components stay consistent.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 155,
+          "end": 163
+        }
+      ],
+      "title": "",
+      "id": "32262"
+    },
+    {
+      "type": "highlight",
+      "description": "_initOnNewIssuance finishes by emitting `Issued`, revealing the `dsId`, `expiry timestamp`, `token addresses`, and the `Uni-v4 pair Id` that the AMM hook already created.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 172,
+          "end": 177
+        }
+      ],
+      "title": "",
+      "id": "32263"
+    },
+    {
+      "type": "highlight",
+      "description": "**Tweaking / pausing PSM behaviour**: governors can change the repurchase fee or individually pause deposits, withdrawals, and repurchases — all flagged by the `Pair Id`.",
+      "file": "contracts/interfaces/Init.sol",
+      "highlight": [
+        {
+          "start": 40,
+          "end": 66
+        }
+      ],
+      "title": "",
+      "id": "32264"
+    },
+    {
+      "type": "highlight",
+      "description": "Similar switches exist for the **Liquidity Vault**, plus a `function` to reset its base redemption fee. Each `toggle` is granular and **Pair-scoped**.",
+      "file": "contracts/interfaces/Init.sol",
+      "highlight": [
+        {
+          "start": 68,
+          "end": 86
+        }
+      ],
+      "title": "",
+      "id": "32265"
+    },
+    {
+      "type": "highlight",
+      "description": "Read-only helpers: `expiry`, `lastDsId`, `underlyingAsset`, and `swapAsset` let scripts discover current state without inspecting storage layouts.",
+      "file": "contracts/interfaces/Init.sol",
+      "highlight": [
+        {
+          "start": 88,
+          "end": 118
+        }
+      ],
+      "title": "",
+      "id": "32266"
+    },
+    {
+      "type": "highlight",
+      "description": "`getId` (**pure**) re-computes the deterministic Id, while `markets` returns the stored `Pair` struct — useful sanity checks for deployment scripts.",
+      "file": "contracts/interfaces/Init.sol",
+      "highlight": [
+        {
+          "start": 120,
+          "end": 128
+        }
+      ],
+      "title": "",
+      "id": "32267"
+    },
+    {
+      "type": "highlight",
+      "description": "Two events tie everything together:\n- `InitializedModuleCore` signals a new market & LV address.\n- `Issued` announces each DS cycle and the RA/CT Uniswap pair. Off-chain agents index both to track liquidity and schedule automation.",
+      "file": "contracts/interfaces/Init.sol",
+      "highlight": [
+        {
+          "start": 130,
+          "end": 155
+        }
+      ],
+      "title": "",
+      "id": "32268"
+    },
+    {
+      "type": "textOnly",
+      "description": "You now have the full picture: how a market’s `Pair Id` is minted, how governance spins up the core modules, issues successive `DS` series, tunes fees and pauses flows, and finally how external systems follow those changes via events.",
+      "title": "",
+      "id": "32269"
+    }
+  ]
+}

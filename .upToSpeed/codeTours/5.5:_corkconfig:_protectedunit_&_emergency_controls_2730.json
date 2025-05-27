@@ -1,0 +1,111 @@
+{
+  "title": "5.5: CorkConfig: ProtectedUnit & Emergency Controls",
+  "id": "7YovkEoyOFZbR/fNpLoyw08Kx+tmdwdp3j3dAq71qdQ=",
+  "originalId": 2730,
+  "position": 20,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "`CorkConfig` sprinkles a handful of **\"break-glass\"** controls at the very bottom of the file. Together they let governance slow attackers (`time-delayed liquidation whitelist`), surgically intervene in any **Protected Unit**, or freeze the whole configuration layer. The next slides locate each lever.",
+      "title": "",
+      "id": "32584"
+    },
+    {
+      "type": "highlight",
+      "description": "A seven-day `WHITELIST_TIME_DELAY` (line `43`) and the `liquidationWhitelist` mapping (`45-46`) record **when** a liquidation contract becomes eligible rather than a simple yes/no flag.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 43,
+          "end": 48
+        }
+      ],
+      "title": "",
+      "id": "32587"
+    },
+    {
+      "type": "highlight",
+      "description": "Lines 148-159 implement the safety valve.\n- `isLiquidationWhitelisted()` (148-152) checks that the stored timestamp has passed.\n- `blacklist()` (153-155) deletes the entry immediately.\n- `whitelist()` (157-159) sets `now + WHITELIST_TIME_DELAY`, forcing a one-week wait before a newcomer can liquidate.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 148,
+          "end": 159
+        }
+      ],
+      "title": "",
+      "id": "32589"
+    },
+    {
+      "type": "highlight",
+      "description": "Governance can `spin up` new Protected Units through a thin wrapper that simply forwards to `ProtectedUnitFactory.deployProtectedUnit()`. Access is restricted by the `onlyManager` modifier, keeping the surface small.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 431,
+          "end": 437
+        }
+      ],
+      "title": "",
+      "id": "32590"
+    },
+    {
+      "type": "highlight",
+      "description": "The same section lets the manager remove or temporarily halt a unit.\n- `deRegisterProtectedUnit()` forgets a unit in the factory (439-441).\n- `pauseProtectedUnitMinting()` / `resumeProtectedUnitMinting()` (443-449) relay to the unit's own pause controls, instantly shutting off or restoring mint.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 439,
+          "end": 449
+        }
+      ],
+      "title": "",
+      "id": "32592"
+    },
+    {
+      "type": "highlight",
+      "description": "`redeemRaWithDsPaWithProtectedUnit()` (451-456) calls `ProtectedUnit.redeemRaWithDsPa()`. Inside the unit this burns DS+PA for RA **and auto-pauses itself**, giving governance a one-transaction cleanup tool.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 451,
+          "end": 456
+        }
+      ],
+      "title": "",
+      "id": "32595"
+    },
+    {
+      "type": "highlight",
+      "description": "`buyDsFromProtectedUnit()` (458-466) uses `ProtectedUnit.useFunds()` to swap idle RA for fresh DS via the `router`, letting governance rebalance or unwind exposure without touching user flows.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 458,
+          "end": 466
+        }
+      ],
+      "title": "",
+      "id": "32596"
+    },
+    {
+      "type": "highlight",
+      "description": "At the very end lie `pause()` and `unpause()` (470-478).  When paused, every `whenNotPaused` path—such as new DS issuance—ceases across the protocol, acting as a circuit-breaker of last resort.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 470,
+          "end": 480
+        }
+      ],
+      "title": "",
+      "id": "32598"
+    },
+    {
+      "type": "textOnly",
+      "description": "These three layers—delayed whitelist, **Protected Unit helpers**, and a global pause—give governance time to react, tools to fix isolated markets, and the ability to halt the entire configuration if necessary.",
+      "title": "",
+      "id": "32601"
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "title": "12.3: ProtectedUnit.sol – Reserve bookkeeping & DS rotation",
+  "id": "zEUEy9Rqm04AKOBWKaSynvm3/xTzKmA0RpPr7AzJDm8=",
+  "originalId": 2836,
+  "position": 64,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This tour shows how the wrapper keeps a correct view of its **DS**, **PA** and **RA** reserves without re-reading storage all the time.",
+      "title": "",
+      "id": "33947"
+    },
+    {
+      "type": "highlight",
+      "description": "Lines 183-187 define `_sync()` – an *internal* routine that refreshes each cached reserve with a live `balanceOf`.  Lines 189-192 expose the same logic through `sync()`, so anyone can call it manually; both carry the `autoUpdateDS` guard that makes sure the DS pointer is already current *before* numbers are stored.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 183,
+          "end": 192
+        }
+      ],
+      "title": "",
+      "id": "33949"
+    },
+    {
+      "type": "highlight",
+      "description": "`autoSync` (lines 173-176) is a **post-action hook**: when a function is tagged, its body runs first, then `_sync()` is invoked automatically, guaranteeing the cache is never stale after state changes.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 172,
+          "end": 177
+        }
+      ],
+      "title": "",
+      "id": "33951"
+    },
+    {
+      "type": "highlight",
+      "description": "`autoUpdateDS` (131-137) is the complementary *pre-action* hook. It calls `_getLastDS()` before control returns to the function body, so every state-changing path works with the latest live DS token.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 131,
+          "end": 137
+        }
+      ],
+      "title": "",
+      "id": "33954"
+    },
+    {
+      "type": "textOnly",
+      "description": "`autoUpdateDS` runs *before* a function, ensuring the pointer is correct, while `autoSync` runs *after*, ensuring the balances are correct.  Together they bracket every mutation.",
+      "title": "",
+      "id": "33955"
+    },
+    {
+      "type": "highlight",
+      "description": "A representative state-mutating entry point.  The `mint` function is guarded by both modifiers; after tokens move, `_sync()` executes automatically so the reserves mirror reality.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 417,
+          "end": 423
+        }
+      ],
+      "title": "",
+      "id": "33957"
+    },
+    {
+      "type": "highlight",
+      "description": "`_fetchLatestDS()` consults `ModuleCore` for the current `DS` id, rejects zero or expired assets, and returns the valid `DS` contract that represents the current epoch.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 200,
+          "end": 208
+        }
+      ],
+      "title": "",
+      "id": "33961"
+    },
+    {
+      "type": "highlight",
+      "description": "`_getLastDS()` relies on `_fetchLatestDS()`. If the stored pointer is blank or expired (line 343) it switches to the new DS and records it in `dsHistory`. The actual balances are left untouched until `_sync()` runs.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 342,
+          "end": 361
+        }
+      ],
+      "title": "",
+      "id": "33966"
+    },
+    {
+      "type": "highlight",
+      "description": "`getReserves()` is a cheap view that simply returns the cached numbers; because every balance-changing route ends with `autoSync`, outside callers can trust these figures.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 226,
+          "end": 230
+        }
+      ],
+      "title": "",
+      "id": "33963"
+    },
+    {
+      "type": "textOnly",
+      "description": "Every mutation therefore executes in this order: 1️⃣ ensure latest DS (`autoUpdateDS`) 2️⃣ perform work 3️⃣ refresh cached balances (`autoSync`).  Read-only users then obtain an always-fresh snapshot via `getReserves()`.",
+      "title": "",
+      "id": "33965"
+    }
+  ]
+}

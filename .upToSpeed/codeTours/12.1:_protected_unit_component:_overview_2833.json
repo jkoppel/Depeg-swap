@@ -1,0 +1,218 @@
+{
+  "title": "12.1: Protected Unit component: Overview",
+  "id": "o5ukJc5mCvqUtZh3M4OilDS5GyT65UyJZpWS/5XOSak=",
+  "originalId": 2833,
+  "position": 62,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "We will take a short tour of the `on-chain hedging wrapper`, walking file-by-file so you can recognise what each piece does and how they fit together.",
+      "title": "",
+      "id": "33867"
+    },
+    {
+      "type": "highlight",
+      "description": "The **ERC-20 wrapper** lives here. Lines 41-49 declare the `ProtectedUnit` token, inheriting multiple helpers and stating that it bundles `DS` + `PA` while exposing hedging hooks for `RA`.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 41,
+          "end": 49
+        }
+      ],
+      "title": "",
+      "id": "33868"
+    },
+    {
+      "type": "highlight",
+      "description": "Just below, three reserve variables (`70-73`) show what the wrapper must keep in balance: `DS`, `PA`, and the hedge bucket `RA`.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 70,
+          "end": 73
+        }
+      ],
+      "title": "",
+      "id": "33869"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "contracts/core/assets/ProtectedUnitFactory.sol"
+      ],
+      "description": "Wrappers are never deployed ad-hoc.  Governance (the `Config contract`) calls this factory which keeps track of every `ProtectedUnit` ever created.",
+      "title": "",
+      "id": "33870"
+    },
+    {
+      "type": "highlight",
+      "description": "The constructor (61-72) wires the factory to `ModuleCore`, `Config`, the `flash-swap router` and `Permit2`, refusing zero addresses so deployments remain well-formed.",
+      "file": "contracts/core/assets/ProtectedUnitFactory.sol",
+      "highlight": [
+        {
+          "start": 61,
+          "end": 72
+        }
+      ],
+      "title": "",
+      "id": "33871"
+    },
+    {
+      "type": "highlight",
+      "description": "`deployProtectedUnit()` (123-139) is the single entry-point: it rejects duplicate IDs, instantiates a new wrapper, registers it, and emits an event.  This is the only sanctioned path to new wrappers.",
+      "file": "contracts/core/assets/ProtectedUnitFactory.sol",
+      "highlight": [
+        {
+          "start": 123,
+          "end": 139
+        }
+      ],
+      "title": "",
+      "id": "33872"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "contracts/core/assets/ProtectedUnitRouter.sol"
+      ],
+      "description": "The router is a convenience layer; it lets a user hit many wrappers in one go while doing all the `Permit2` plumbing for them.",
+      "title": "",
+      "id": "33873"
+    },
+    {
+      "type": "highlight",
+      "description": "`batchMint()` (75-139) shows the pattern: validate parallel arrays, execute a single `Permit2` batch approval, then loop over each target wrapper, forwarding the user’s assets and minting `PU` tokens back.",
+      "file": "contracts/core/assets/ProtectedUnitRouter.sol",
+      "highlight": [
+        {
+          "start": 75,
+          "end": 139
+        }
+      ],
+      "title": "",
+      "id": "33874"
+    },
+    {
+      "type": "highlight",
+      "description": "`batchBurn()` (190-204) mirrors mint: it receives the user’s PU tokens, burns them one-by-one and funnels the reclaimed DS/PA/RA back, or forwards them when used through `Permit2`.",
+      "file": "contracts/core/assets/ProtectedUnitRouter.sol",
+      "highlight": [
+        {
+          "start": 190,
+          "end": 204
+        }
+      ],
+      "title": "",
+      "id": "33875"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "contracts/libraries/ProtectedUnitMath.sol"
+      ],
+      "description": "All shared calculations live here. Four helpers matter the most and every wrapper call hits one of them.",
+      "title": "",
+      "id": "33876"
+    },
+    {
+      "type": "highlight",
+      "description": "`mint()` (12-29) converts a `PA` + `DS` contribution into new liquidity tokens, doing a 1-for-1 mint when the pool is empty and proportional mints afterwards.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "33877"
+    },
+    {
+      "type": "highlight",
+      "description": "**`previewMint()`** (39-50) is the **read-only twin**: given a desired number of `PU` tokens it tells the UI how many `DS` and `PA` are required right now.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 39,
+          "end": 50
+        }
+      ],
+      "title": "",
+      "id": "33878"
+    },
+    {
+      "type": "highlight",
+      "description": "`normalizeDecimals()` (52-58) delegates to `TransferHelper` so tokens with non-18 decimals can still participate fairly in the maths.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 52,
+          "end": 58
+        }
+      ],
+      "title": "",
+      "id": "33879"
+    },
+    {
+      "type": "highlight",
+      "description": "`withdraw()` (60-81) does the inverse of `mint` – break a burn amount into proportional `DS`/`PA`/`RA`, while guarding against zero-liquidity edge cases.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 60,
+          "end": 81
+        }
+      ],
+      "title": "",
+      "id": "33880"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "contracts/libraries/RedemptionAssetManagerLib.sol"
+      ],
+      "description": "Liquidation logic needs to know how much Redemption Asset (RA) is locked vs. free.  This small `library` records and mutates that state.",
+      "title": "",
+      "id": "33881"
+    },
+    {
+      "type": "highlight",
+      "description": "The `struct` (10-16) stores the RA token address plus two counters: `locked` and `free`.",
+      "file": "contracts/libraries/RedemptionAssetManagerLib.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 16
+        }
+      ],
+      "title": "",
+      "id": "33882"
+    },
+    {
+      "type": "highlight",
+      "description": "`convertAllToFree()`, `incLocked()` and `decLocked()` (34-45) are the primitives liquidations use to move RA between buckets safely.",
+      "file": "contracts/libraries/RedemptionAssetManagerLib.sol",
+      "highlight": [
+        {
+          "start": 34,
+          "end": 45
+        }
+      ],
+      "title": "",
+      "id": "33883"
+    },
+    {
+      "type": "textOnly",
+      "description": "Public-facing interfaces (`IProtectedUnit.sol`, `IProtectedUnitFactory.sol`, `IProtectedUnitRouter.sol` …) mirror every external function we touched today, ensuring integrators can code against stable ABIs. We’ll dig into them later.",
+      "title": "",
+      "id": "33884"
+    },
+    {
+      "type": "textOnly",
+      "description": "You now know which file `mints`, which one `deploys`, which `routes batches`, where the `math` lives, and how `liquidation balances` are tallied – the complete map of the **hedging-wrapper subsystem**.",
+      "title": "",
+      "id": "33885"
+    }
+  ]
+}

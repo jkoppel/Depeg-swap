@@ -1,0 +1,137 @@
+{
+  "title": "8.2: Vault API & Entry Contract",
+  "id": "+18XEwWlYfqscFjGxFaCX7woEubfHwy03a032Uv7Zzo=",
+  "originalId": 2741,
+  "position": 34,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This short tour looks at the `Vault contract`’s public surface and shows how almost every user call is a guarded one-liner that delegates real work to libraries through its `State struct`.",
+      "title": "",
+      "id": "32698"
+    },
+    {
+      "type": "highlight",
+      "description": "The `Vault` interface defines the core data that flows through the contract: a bundle of helper contracts, the **EIP-2612** permit container, and predefined parameter / result records for early redemption.",
+      "file": "contracts/interfaces/IVault.sol",
+      "highlight": [
+        {
+          "start": 16,
+          "end": 35
+        }
+      ],
+      "title": "",
+      "id": "32699"
+    },
+    {
+      "type": "highlight",
+      "description": "`depositLv` is the primary entry point. From the `interface` you already know the exact inputs, the tolerance parameters, and that it returns the amount of LV minted.",
+      "file": "contracts/interfaces/IVault.sol",
+      "highlight": [
+        {
+          "start": 93,
+          "end": 100
+        }
+      ],
+      "title": "",
+      "id": "32700"
+    },
+    {
+      "type": "highlight",
+      "description": "Two overloads of `redeemEarlyLv` let users burn `LV` before expiry. One variant carries an `EIP-2612` signature so the approval can be bundled into the same transaction.",
+      "file": "contracts/interfaces/IVault.sol",
+      "highlight": [
+        {
+          "start": 106,
+          "end": 114
+        }
+      ],
+      "title": "",
+      "id": "32701"
+    },
+    {
+      "type": "highlight",
+      "description": "`provideLiquidityWithFlashSwapFee` is the third important user function. The router pushes **RA fees** into the vault; the vault later turns them into **LP tokens** to benefit **LV holders**.",
+      "file": "contracts/interfaces/IVault.sol",
+      "highlight": [
+        {
+          "start": 117,
+          "end": 122
+        }
+      ],
+      "title": "",
+      "id": "32702"
+    },
+    {
+      "type": "highlight",
+      "description": "**Liquidation flows** use a separate `interface`. These three `functions` move funds between the `vault` and a `whitelisted liquidator` and then tell the `vault` to reuse the proceeds.",
+      "file": "contracts/interfaces/IVaultLiquidation.sol",
+      "highlight": [
+        {
+          "start": 15,
+          "end": 26
+        }
+      ],
+      "title": "",
+      "id": "32703"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultCore` declares it implements both **interfaces** and grafts **utility libraries** onto its `State struct`. This sets up the **delegate-to-library pattern** used across the protocol.",
+      "file": "contracts/core/Vault.sol",
+      "highlight": [
+        {
+          "start": 17,
+          "end": 20
+        }
+      ],
+      "title": "",
+      "id": "32704"
+    },
+    {
+      "type": "highlight",
+      "description": "`depositLv` after **access-control** simply calls `state.deposit(...)` from `VaultLibrary`, then emits an event. The heavy lifting lives entirely in the library.",
+      "file": "contracts/core/Vault.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 36
+        }
+      ],
+      "title": "",
+      "id": "32705"
+    },
+    {
+      "type": "highlight",
+      "description": "`redeemEarlyLv` follows the same recipe: **guard checks**, build a small `struct`, one call to `state.redeemEarly(...)`, **event emission** — nothing else.",
+      "file": "contracts/core/Vault.sol",
+      "highlight": [
+        {
+          "start": 44,
+          "end": 61
+        }
+      ],
+      "title": "",
+      "id": "32706"
+    },
+    {
+      "type": "highlight",
+      "description": "`provideLiquidityWithFlashSwapFee` is another single-line delegation. After the **router guard** it credits **State** RA to the State via `allocateFeesToVault`.",
+      "file": "contracts/core/Vault.sol",
+      "highlight": [
+        {
+          "start": 118,
+          "end": 123
+        }
+      ],
+      "title": "",
+      "id": "32707"
+    },
+    {
+      "type": "textOnly",
+      "description": "All three user-facing functions — and their liquidation counterparts — are thin wrappers. The contract fulfils two interfaces while keeping `byte-code` small and logic reusable by funnelling everything through `State` → `VaultLibrary`.",
+      "title": "",
+      "id": "32708"
+    }
+  ]
+}

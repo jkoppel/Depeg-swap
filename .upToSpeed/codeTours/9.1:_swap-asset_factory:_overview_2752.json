@@ -1,0 +1,130 @@
+{
+  "title": "9.1: Swap-Asset Factory: Overview",
+  "id": "kGlSiDtyTHeH1OC9dCoMCjp8jmIkmfTH+lQf6JJaCZc=",
+  "originalId": 2752,
+  "position": 43,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This tour follows the life-cycle of an asset: we meet the **public interface** first, then the **factory** that mints tokens and finally the `ERC-20` implementation every token instance shares.",
+      "title": "",
+      "id": "32816"
+    },
+    {
+      "type": "textOnly",
+      "description": "There are only three moving parts:\n- `contracts/interfaces/IAssetFactory.sol`\n- `contracts/core/assets/AssetFactory.sol`\n- `contracts/core/assets/Asset.sol`\nThey sit in different folders so that interface, factory logic and token logic stay cleanly separated.",
+      "title": "",
+      "id": "32817"
+    },
+    {
+      "type": "highlight",
+      "description": "The interface exposes two deployment events.  `AssetDeployed` (line 16) is for a full **CT** + **DS** pair, `LvAssetDeployed` (line 22) is for a single **LV** token.  Any external system can rely on these events to discover what was minted.",
+      "file": "contracts/interfaces/IAssetFactory.sol",
+      "highlight": [
+        {
+          "start": 11,
+          "end": 23
+        }
+      ],
+      "title": "",
+      "id": "32818"
+    },
+    {
+      "type": "highlight",
+      "description": "`DeployParams` (lines 68-76) groups every argument required to mint a swap pair: underlying `RA`/`PA`, owner, initial ARP, expiry interval, an exchange-rate provider, the psm exchange rate and a `ds epoch id`.",
+      "file": "contracts/interfaces/IAssetFactory.sol",
+      "highlight": [
+        {
+          "start": 67,
+          "end": 76
+        }
+      ],
+      "title": "",
+      "id": "32819"
+    },
+    {
+      "type": "highlight",
+      "description": "The two creation paths are surfaced as plain functions.  `deploySwapAssets(...)` returns the `CT + DS` pair; `deployLv(...)` returns a single `LV` token.  Everything else in the interface are view helpers that read the factory’s registry.",
+      "file": "contracts/interfaces/IAssetFactory.sol",
+      "highlight": [
+        {
+          "start": 78,
+          "end": 95
+        }
+      ],
+      "title": "",
+      "id": "32820"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside the concrete factory the first block sets the scene.\n\n- `MAX_LIMIT` caps pagination.\n- `CT_PREFIX` / `DS_PREFIX` / `LV_PREFIX` will be embedded into every token symbol.\n- `SwapPair` plus the mapping grid (`lvs`, `pairs`, `swapAssets`, `deployed`, `variantIndex`…) form an on-chain registry so anyone can query what exists.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "32821"
+    },
+    {
+      "type": "highlight",
+      "description": "`_generateSymbolWithVariant` stitches four pieces together to build unique symbols: the PA symbol (`line 65`), a month indicator or \"!\" (`line 66`), the CT/DS/LV prefix (`line 68`) and a per-pair variant number supplied by `_generateVariant` (`line 70`).",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 60,
+          "end": 71
+        }
+      ],
+      "title": "",
+      "id": "32822"
+    },
+    {
+      "type": "highlight",
+      "description": "`deployLv` (256-281) builds a `Pair` object, mints one LV token (269-272), links it to `ModuleCore` and the market id, stores the pair in the registry (276-279) and finally emits `LvAssetDeployed` (281).  From this point on `deploySwapAssets` is allowed for that `Pair`.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 256,
+          "end": 281
+        }
+      ],
+      "title": "",
+      "id": "32823"
+    },
+    {
+      "type": "highlight",
+      "description": "`deploySwapAssets` (192-245) validates inputs (198-204), refuses to act if its parent LV is missing (209-211), then mints a **CT** and a **DS** token (214-239).  Both tokens are registered (241-244) and the factory fires `AssetDeployed` (246-247).",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 192,
+          "end": 245
+        }
+      ],
+      "title": "",
+      "id": "32824"
+    },
+    {
+      "type": "highlight",
+      "description": "Every minted token is an Asset contract that inherits `ERC20Burnable`, `Permit`, `Ownable`, `Expiry` and `ExchangeRate` (line 81).  The **constructor** stores its `pair name`, `epoch id` and remembers the factory as immutable creator (100-111).",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 81,
+          "end": 90
+        }
+      ],
+      "title": "",
+      "id": "32825"
+    },
+    {
+      "type": "textOnly",
+      "description": "You can now name the three files, describe the registry mappings, explain automatic symbol creation and outline both deployment flows. In short: an upgradeable `AssetFactory` can mint either an `LV token` or a `CT + DS pair`, records them for discovery and hands out `ERC-20 tokens` that already understand expiry and exchange rates.",
+      "title": "",
+      "id": "32826"
+    }
+  ]
+}

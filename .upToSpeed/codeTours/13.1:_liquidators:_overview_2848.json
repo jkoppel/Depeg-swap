@@ -1,0 +1,150 @@
+{
+  "title": "13.1: Liquidators: Overview",
+  "id": "RQSLVFSLgJJ6dLJ9uPPZyp2mSrxFpKRuBrfv3zFNyYI=",
+  "originalId": 2848,
+  "position": 72,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Build a mental picture of the `Liquidators` subsystem before looking at any call-graph details.  We will first meet the main `Liquidator` contract, then its per-order clones, then the public interface used by the rest of `Cork`, and finally the `whitelist registry`.  After this tour the life-cycle of a liquidation—from creation through CoW fill to final settlement—should feel familiar.",
+      "title": "",
+      "id": "34135"
+    },
+    {
+      "type": "highlight",
+      "description": "This file is the entry point for every liquidation. It sits behind `ILiquidator`, carries `CoW`-specific naming, and—most importantly—owns the coordination role. All other contracts treat it as the **single façade** for vault and `Protected-Unit` liquidations.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 25,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "34136"
+    },
+    {
+      "type": "highlight",
+      "description": "Two compact structs keep per-order state.  `Details` (lines 40-44) care only about the asset that will be sold, the amount, and the asset to buy.  `Orders` (lines 53-59) wrap those numbers with bookkeeping: which child clone executes, which vault (if any) is affected, and the ultimate receiver of proceeds.  Grouping fields like this lets the coordinator update or delete everything atomically.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 40,
+          "end": 59
+        }
+      ],
+      "title": "",
+      "id": "34142"
+    },
+    {
+      "type": "highlight",
+      "description": "`orderCalls` is the sole on-chain dictionary of active liquidations. Each backend-generated `refId` points to one `Orders` **struct**, and the entry is removed as soon as `finish*` succeeds. If you ever wonder where per-order data lives—this is it.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 88,
+          "end": 90
+        }
+      ],
+      "title": "",
+      "id": "34140"
+    },
+    {
+      "type": "highlight",
+      "description": "The coordinator never performs swaps itself. Instead it clones a minimal proxy and hands it the `Duties`. `Vaults` and `Protected Units` each have their own helper (lines 160-162 and 168-172). `CREATE2` plus a deterministic salt allows front-end code to predict the future receiver address before the clone exists.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 156,
+          "end": 173
+        }
+      ],
+      "title": "",
+      "id": "34141"
+    },
+    {
+      "type": "highlight",
+      "description": "Every clone extends `ChildLiquidatorBase`. It stores the `order` (line 27), the **CoW** `orderUid` (line 30) and the `receiver address` (line 33). `Ownership` is set to the main `Liquidator`; the `onlyLiquidator` modifier (lines 49-54) guarantees that no one else can trigger fund movements.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 22,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "34149"
+    },
+    {
+      "type": "highlight",
+      "description": "`ProtectedUnitChildLiquidator` focuses on funneling balances into a Protected Unit. It simply approves the destination and calls `receiveFunds` for both the bought token and any leftover sell token (lines 114-120 and 122-126). No trading logic lives here—forwarding is its single concern.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 98,
+          "end": 118
+        }
+      ],
+      "title": "",
+      "id": "34145"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultChildLiquidator` performs the same forwarding, but the vault expects its `Id` to be supplied. Lines 149 and 155 call receiver-side hooks so the vault can account for trade proceeds and leftovers separately.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 142,
+          "end": 156
+        }
+      ],
+      "title": "",
+      "id": "34147"
+    },
+    {
+      "type": "highlight",
+      "description": "`ILiquidator` is the public API imported by other subsystems. The two *`Create…Params`* structs expose exactly the data that ends up inside `Details` and `Orders`, without revealing internal fields such as the **clone address** or **receiver**.",
+      "file": "contracts/interfaces/ILiquidator.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "34148"
+    },
+    {
+      "type": "highlight",
+      "description": "Further down the same interface we meet the verbs that drive the lifecycle: `createOrderVault` / `createOrderProtectedUnit` to start; `finishVaultOrder` / `finishProtectedUnitOrder` to settle; and `finishProtectedUnitOrderAndExecuteTrade` to combine settlement with an on-chain trade when needed. Outside callers never need anything else.",
+      "file": "contracts/interfaces/ILiquidator.sol",
+      "highlight": [
+        {
+          "start": 71,
+          "end": 114
+        }
+      ],
+      "title": "",
+      "id": "34156"
+    },
+    {
+      "type": "highlight",
+      "description": "Access control for external liquidators is concentrated in this tiny registry. Contracts consult `isLiquidationWhitelisted` before trusting a caller; governance can whitelist or blacklist addresses with a single transaction.",
+      "file": "contracts/interfaces/ILiquidatorRegistry.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 10
+        }
+      ],
+      "title": "",
+      "id": "34151"
+    },
+    {
+      "type": "textOnly",
+      "description": "End-to-end journey:\n1. Off-chain logic decides a vault or `Protected Unit` must be liquidated, crafts a `CoW` order, and picks a random `internalRefId`.\n2. It calls `createOrderVault` / `createOrderProtectedUnit`. The coordinator clones a `ChildLiquidator`, pre-signs the `CoW` order, transfers the sell token into the clone, and records `orderCalls[refId]`.\n3. `CoW Protocol` fills the order; bought tokens now sit inside the clone.\n4. The backend notices the fill and calls the appropriate `finish*` function with the same `refId`.\n5. Liquidator asks the clone to `moveFunds`. Funds are approved to the vault or `Protected Unit`, receiver-side hooks pull them in, and the mapping entry is deleted.\nNo user asset remains in the subsystem longer than a single transaction, and every per-order contract is lightweight, deterministic, and disposable.",
+      "title": "",
+      "id": "34157"
+    }
+  ]
+}

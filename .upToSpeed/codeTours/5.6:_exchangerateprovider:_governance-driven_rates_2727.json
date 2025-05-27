@@ -1,0 +1,98 @@
+{
+  "title": "5.6: ExchangeRateProvider: Governance-Driven Rates",
+  "id": "fWH0zB8BLBKq3+hKQiNf4BsnPIW3iuSF1cn0YMoiFbs=",
+  "originalId": 2727,
+  "position": 21,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This tour dissects `ExchangeRateProvider`, the tiny on-chain oracle controlled by `CorkConfig`. The tour examines its storage, guards, and public surface to demonstrate where each **DS** ↔ underlying exchange-rate is stored, the access controls in place, and the methods other modules use to read it.",
+      "title": "",
+      "id": "32656"
+    },
+    {
+      "type": "highlight",
+      "description": "The entire mutable state fits in two slots.  Line 17 pins the `CONFIG` address—a once-set pointer to `CorkConfig`—while line 19 opens a mapping from `Pair Id` to the current exchange-rate.  The constructor (30-34) writes `CONFIG` once and rejects the zero address.  Because no function ever writes `CONFIG` again, it behaves as if it were declared **immutable** even though the keyword is omitted.",
+      "file": "contracts/core/ExchangeRateProvider.sol",
+      "highlight": [
+        {
+          "start": 17,
+          "end": 35
+        }
+      ],
+      "title": "",
+      "id": "32658"
+    },
+    {
+      "type": "highlight",
+      "description": "`onlyConfig()` is an **inline gate**: a single `if` + `revert` that any `mutating function` must call. Using a `helper` instead of a `modifier` keeps the `revert` reason local and shaves a few `gas units` while still making unauthorised writes impossible.",
+      "file": "contracts/core/ExchangeRateProvider.sol",
+      "highlight": [
+        {
+          "start": 24,
+          "end": 28
+        }
+      ],
+      "title": "",
+      "id": "32662"
+    },
+    {
+      "type": "highlight",
+      "description": "Read-side API. External modules fetch a placeholder aggregate `rate()` and, more importantly, `rate(Id)` which just returns the number stored in the mapping—no hidden maths, so downstream logic can trust the value is what `CorkConfig` last pushed.",
+      "file": "contracts/core/ExchangeRateProvider.sol",
+      "highlight": [
+        {
+          "start": 37,
+          "end": 43
+        }
+      ],
+      "title": "",
+      "id": "32664"
+    },
+    {
+      "type": "highlight",
+      "description": "**setRate()** is the sole writer. It first enforces **onlyConfig()**; once that check passes it overwrites `exchangeRate[id]` with whatever `CorkConfig` supplies—nothing else can reach this line.",
+      "file": "contracts/core/ExchangeRateProvider.sol",
+      "highlight": [
+        {
+          "start": 50,
+          "end": 54
+        }
+      ],
+      "title": "",
+      "id": "32663"
+    },
+    {
+      "type": "highlight",
+      "description": "`Id` is a user-defined value type wrapping `bytes32`.  `PairLibrary` hashes the pair's attributes to derive this key, giving a collision-free, 32-byte handle that indexers and mappings can use cheaply.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 6,
+          "end": 8
+        }
+      ],
+      "title": "",
+      "id": "32665"
+    },
+    {
+      "type": "highlight",
+      "description": "Other contracts are compiled against this interface: two view functions, zero setters. That design guarantees every rate update must flow through `CorkConfig` → `ExchangeRateProvider` → `mapping`.",
+      "file": "contracts/interfaces/IExchangeRateProvider.sol",
+      "highlight": [
+        {
+          "start": 11,
+          "end": 14
+        }
+      ],
+      "title": "",
+      "id": "32667"
+    },
+    {
+      "type": "textOnly",
+      "description": "Putting it together: `CorkConfig`’s address is burned into `ExchangeRateProvider` at deployment, `onlyConfig()` locks every write behind that address, and downstream code is limited to read-only calls.  The oracle’s minimalism keeps `DS` price storage transparent and its update pathway unforgeable.",
+      "title": "",
+      "id": "32670"
+    }
+  ]
+}

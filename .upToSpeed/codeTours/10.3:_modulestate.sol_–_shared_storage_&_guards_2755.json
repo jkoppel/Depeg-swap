@@ -1,0 +1,163 @@
+{
+  "title": "10.3: ModuleState.sol – shared storage & guards",
+  "id": "O7EvaVXM58MEgWNVfD0M7QxspjAUUcBMs7Sk1gU8vm4=",
+  "originalId": 2755,
+  "position": 48,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "`ModuleState` is the thin layer that glues every **core Module** to the rest of the Cork ecosystem.  By the end of this tour you will know which addresses it stores, how each guard keeps the module safe, and where the pause-switches live.",
+      "title": "",
+      "id": "32941"
+    },
+    {
+      "type": "highlight",
+      "description": "Five key addresses are stored alongside `states`:\n- `SWAP_ASSET_FACTORY` for flash-swap token minting\n- `DS_FLASHSWAP_ROUTER` for flash-swap execution\n- `AMM_HOOK` for Uni V4 LP position management\n- `CONFIG` for governance control\n- `WITHDRAWAL_CONTRACT` for off-chain redemption queuing\nTheir placement ensures O(1) access to both global config and pair-specific state data.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 24,
+          "end": 35
+        }
+      ],
+      "title": "",
+      "id": "32943"
+    },
+    {
+      "type": "highlight",
+      "description": "`states` is a mapping `Id ⇒ State`. Every modifier we examine next drills into `states[id]` to read deeply nested flags, so keep this root pointer in mind.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 24,
+          "end": 25
+        }
+      ],
+      "title": "",
+      "id": "32946"
+    },
+    {
+      "type": "highlight",
+      "description": "`initializeModuleState` runs **once** in the constructor:\n- Lines 56-60 reject any zero-address, protecting against \"blank\" redeployments.\n- Lines 63-66 write the four infrastructure pointers exactly **once**, making them effectively immutable for the module's lifetime.\nThis single-initialisation pattern is the contract's first safety net.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 50,
+          "end": 67
+        }
+      ],
+      "title": "",
+      "id": "32948"
+    },
+    {
+      "type": "highlight",
+      "description": "`onlyConfig()` funnels *every* governance action through the address stored in `CONFIG`. Having one choke-point means role changes, pausings, or upgrades are all driven from **one contract** instead of being scattered across modules.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 38,
+          "end": 44
+        }
+      ],
+      "title": "",
+      "id": "32950"
+    },
+    {
+      "type": "highlight",
+      "description": "`onlyFlashSwapRouter()` ensures that the flash-swap callback can only come from the `router` specified during initialisation. Any external actor that tries to mimic the `router`’s interface is rejected immediately.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 101,
+          "end": 105
+        }
+      ],
+      "title": "",
+      "id": "32951"
+    },
+    {
+      "type": "highlight",
+      "description": "`onlyWhiteListedLiquidationContract()` defers to `ILiquidatorRegistry` inside `CorkConfig`. Governance can add or remove liquidators centrally without touching the modules themselves.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 131,
+          "end": 135
+        }
+      ],
+      "title": "",
+      "id": "32954"
+    },
+    {
+      "type": "highlight",
+      "description": "Three PSM-specific guards tap booleans inside `states[id].psm`:\n- **Deposit** guard blocks new capital when `isDepositPaused` is true.\n- **Withdrawal** guard halts exits via `isWithdrawalPaused`.\n- **Repurchase** guard turns off token buy-backs via `isRepurchasePaused`.\nEach switch is independent, letting governance fine-tune the response to market stress.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 95,
+          "end": 117
+        }
+      ],
+      "title": "",
+      "id": "32955"
+    },
+    {
+      "type": "highlight",
+      "description": "These are the three pause flags inside `PsmState`. Because the modifiers read **directly** from storage, pausing is gas-cheap and instantly reflected across every function that calls the guard.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 37
+        }
+      ],
+      "title": "",
+      "id": "32957"
+    },
+    {
+      "type": "highlight",
+      "description": "Vault (LV) operations have their own pair of guards.  They read `states[id].vault.config` to stop deposits or withdrawals independently, giving governance the same granularity on the liquidity-vault side.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 119,
+          "end": 129
+        }
+      ],
+      "title": "",
+      "id": "32959"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultConfig` keeps the **LV pause flags** right next to other risk parameters, making pausing a single-storage-slot update.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 127,
+          "end": 130
+        }
+      ],
+      "title": "",
+      "id": "32962"
+    },
+    {
+      "type": "highlight",
+      "description": "Helper view functions broadcast the cached infrastructure addresses:\n- `getRouterCore()` → flash-swap router\n- `getAmmRouter()` → Uni V4 hook\n- `getTreasuryAddress()` → protocol treasury (via `CorkConfig`)\nOther contracts read these helpers instead of storing their own copies, so a single config change propagates everywhere with **no** storage migration.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 73,
+          "end": 87
+        }
+      ],
+      "title": "",
+      "id": "32963"
+    },
+    {
+      "type": "textOnly",
+      "description": "Putting it all together: a handful of **immutable addresses**, a **root mapping**, and twelve short **guard helpers** give every module a **single source of truth** plus **multiple circuit-breakers** that governance can flip in real time.",
+      "title": "",
+      "id": "32964"
+    }
+  ]
+}

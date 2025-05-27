@@ -1,0 +1,137 @@
+{
+  "title": "10.5: Pair & PeggedAsset helpers",
+  "id": "rCxjtgu3NIWUg3NMUzCylyNKBmMLtKwXjl8QBsDgivU=",
+  "originalId": 2813,
+  "position": 50,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "The following tour walks through the two tiny helper libraries that every other contract in the system leans on for token-agnostic market logic.\n\n- `Pair` encodes the immutable facts that identify one RA/PA market and turns that bundle into a deterministic `bytes32` Id.\n- `PeggedAsset` wraps a single address so that ERC-20 interactions are always made through OpenZeppelin's `SafeERC20` helpers.\n- Higher layers (`ModuleCore`, `Vault`, `PSM` …) reference markets only through the Id and pull the actual token addresses on demand.",
+      "title": "",
+      "id": "33718"
+    },
+    {
+      "type": "highlight",
+      "description": "`Pair` keeps five pieces of data. Lines 11-22 show the two token addresses (`pa` & `ra`) plus three numerical parameters – `initialArp` (starting CT/DS price), `expiryInterval` (lifetime of each DS issuance) and the address of an `ExchangeRateProvider`. Because the `struct` is stored once during module creation and never mutated, it plays the role of immutable market metadata.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 11,
+          "end": 22
+        }
+      ],
+      "title": "",
+      "id": "33719"
+    },
+    {
+      "type": "highlight",
+      "description": "Line 6 introduces a **user-defined value type**:\n\n`Id` is just `bytes32`, but the alias gives the compiler a separate type – accidental mixing with raw hashes becomes impossible.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 8
+        }
+      ],
+      "title": "",
+      "id": "33720"
+    },
+    {
+      "type": "highlight",
+      "description": "`toId()` (37-40) deterministically hashes the entire struct.  Any contract can recompute the same `bytes32` from the raw parameters, so no external registry is needed to map \"pair\" ➔ \"id\".",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 37,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "33721"
+    },
+    {
+      "type": "highlight",
+      "description": "`initialize()` is the only constructor-like method for `Pair`. It reverts on a zero address (`46-48`) and on `pa == ra` (`49-51`), guaranteeing that every persisted struct represents a valid market before the `Id` is derived at line `52`.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 41,
+          "end": 53
+        }
+      ],
+      "title": "",
+      "id": "33722"
+    },
+    {
+      "type": "highlight",
+      "description": "Helper view functions for day-to-day access:\n- `peggedAsset()` gives a lightweight `PeggedAsset` wrapper.\n- `underlyingAsset()` / `redemptionAsset()` return the token addresses in the order used by front-ends.\n- `isInitialized()` (68-69) is a cheap existence check – any id whose pa & ra are still the zero address is considered a phantom.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 55,
+          "end": 70
+        }
+      ],
+      "title": "",
+      "id": "33723"
+    },
+    {
+      "type": "highlight",
+      "description": "Example usage.  `LVDepositNotPaused` first indexes the giant states mapping by the `Pair Id`.  Because every deposit path is preceded elsewhere by `onlyInitialized()`, a phantom id would have reverted earlier via the `isInitialized()` test, so this deposit-pause guard can safely assume the `Pair` struct is present.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 119,
+          "end": 122
+        }
+      ],
+      "title": "",
+      "id": "33724"
+    },
+    {
+      "type": "highlight",
+      "description": "`PeggedAsset` is nothing more than an `address` wrapped in its own `struct` – enough to let the compiler distinguish **“a PA token”** from any other address.",
+      "file": "contracts/libraries/PeggedAssetLib.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 11
+        }
+      ],
+      "title": "",
+      "id": "33725"
+    },
+    {
+      "type": "highlight",
+      "description": "`asErc20()` converts the wrapper back into an `IERC20` instance. Because the library imports `SafeERC20` (line 4), callers automatically get `safeTransfer`/`safeApprove` with proper decimal handling – no need to remember individual token precisions.",
+      "file": "contracts/libraries/PeggedAssetLib.sol",
+      "highlight": [
+        {
+          "start": 22,
+          "end": 24
+        }
+      ],
+      "title": "",
+      "id": "33726"
+    },
+    {
+      "type": "highlight",
+      "description": "`ModuleCore` exposes `getId()` so that front-ends (or off-chain indexing jobs) can derive the same deterministic `bytes32` without touching storage. Internally it just calls the `Pair initializer` and hashes the result, mirroring the steps we saw earlier.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 73,
+          "end": 79
+        }
+      ],
+      "title": "",
+      "id": "33727"
+    },
+    {
+      "type": "textOnly",
+      "description": "Putting it together:\n\n- Contracts that care about \"what market am I operating on\" never keep token addresses in their own storage – they carry a single Id.\n- That Id can be regenerated anywhere and dereferenced back into the full Pair struct when real addresses are required.\n- `PeggedAssetLib` shrinks all ERC-20 handling for PA tokens down to `pa.asErc20().safeTransfer(...)`, keeping arithmetic consistent across tokens with different decimals.\n\nThis separation keeps higher-level logic clean, avoids duplicate state, and makes it trivial for external callers to interact with any market just by recomputing its Id.",
+      "title": "",
+      "id": "33728"
+    }
+  ]
+}

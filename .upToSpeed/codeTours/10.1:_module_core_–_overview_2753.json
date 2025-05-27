@@ -1,0 +1,124 @@
+{
+  "title": "10.1: Module Core – overview",
+  "id": "tRnaLoknKRAe+orwBy5rlouOYkgUwzbhnbIoIfFYrXQ=",
+  "originalId": 2753,
+  "position": 46,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "A whistle-stop tour of the storage and key abstractions that every user-facing call eventually touches.",
+      "title": "",
+      "id": "32865"
+    },
+    {
+      "type": "highlight",
+      "description": "`ModuleCore` sits behind an upgradeable proxy and is the single public entry for all user operations. Line 23 shows the contract inheriting `OwnableUpgradeable` and `UUPSUpgradeable` while also pulling in `PsmCore` and `VaultCore`, meaning every deposit, withdrawal, swap or vault action flows through this address.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 18,
+          "end": 24
+        }
+      ],
+      "title": "",
+      "id": "32867"
+    },
+    {
+      "type": "highlight",
+      "description": "Notice how almost no heavy logic lives here. The `using … for …` directives bolt library methods directly onto a `State` pointer or `Pair` value, letting pure libraries do the complex work while the core contract remains a thin router.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 28,
+          "end": 30
+        }
+      ],
+      "title": "",
+      "id": "32869"
+    },
+    {
+      "type": "highlight",
+      "description": "In `ModuleState` a single mapping ties a market identifier (`Id`) to its bookkeeping struct (`State`).  One `State` instance per market is shared by both the `PSM` and the `Vault`, ensuring a unified source of truth.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 22,
+          "end": 26
+        }
+      ],
+      "title": "",
+      "id": "32871"
+    },
+    {
+      "type": "highlight",
+      "description": "The private initializer stores four global addresses that every other component relies on:\n- `SWAP_ASSET_FACTORY` – deploys CT, DS and LV tokens.\n- `DS_FLASHSWAP_ROUTER` – executes flash-swap liquidations.\n- `AMM_HOOK` – UniV4 hook triggered when the protocol routes to the AMM.\n- `CONFIG` – governance & parameter contract.\nHaving them here means libraries can read them without extra storage plumbing.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 50,
+          "end": 67
+        }
+      ],
+      "title": "",
+      "id": "32874"
+    },
+    {
+      "type": "highlight",
+      "description": "The `State struct` is the real ledger:\n1. `globalAssetIdx` – ever-increasing epoch counter.\n2. `info` – immutable **Pair metadata**.\n3. `ds` – mapping epoch ⇒ DepegSwap tokens.\n4. `psm` & `vault` – the two sub-books that share this header.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 22
+        }
+      ],
+      "title": "",
+      "id": "32876"
+    },
+    {
+      "type": "highlight",
+      "description": "Line 19 defines the `ds` mapping. When a new epoch is issued the freshly minted `CT`/`DS` pair gets inserted here at `globalAssetIdx`, giving deterministic access to historical swaps.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 17,
+          "end": 20
+        }
+      ],
+      "title": "",
+      "id": "32878"
+    },
+    {
+      "type": "highlight",
+      "description": "`Id` is simply `bytes32`, and the accompanying `Pair` struct packs (`pa`, `ra`, `initialArp`, `expiryInterval`, `exchangeRateProvider`).  Hashing the struct (`toId`) produces the deterministic key used in every `State` mapping.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 6,
+          "end": 22
+        }
+      ],
+      "title": "",
+      "id": "32879"
+    },
+    {
+      "type": "highlight",
+      "description": "`StateView` inherits the same `ModuleState` layout but offers only getters. Deployed on a fork, auditors can swap its bytecode in place of `ModuleCore` and inspect every internal field without mutating state.",
+      "file": "contracts/core/StateView.sol",
+      "highlight": [
+        {
+          "start": 13,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "32880"
+    },
+    {
+      "type": "textOnly",
+      "description": "To recap: `ModuleCore` orchestrates all public calls; `ModuleState` holds cross-market globals; the `State` struct keeps per-pair accounting; `Pair` provides the deterministic key; and `StateView` offers a safe read-only window for on-chain debugging.",
+      "title": "",
+      "id": "32883"
+    }
+  ]
+}

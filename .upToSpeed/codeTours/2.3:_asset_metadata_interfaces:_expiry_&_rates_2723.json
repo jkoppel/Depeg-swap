@@ -1,0 +1,111 @@
+{
+  "title": "2.3: Asset Metadata Interfaces: Expiry & Rates",
+  "id": "JnvrZ5vCxm4fr2i7433EWKTtTlQS5HfVhyu8E9PTGjQ=",
+  "originalId": 2723,
+  "position": 4,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Two tiny interfaces carry metadata used across every derivative token: `IExpiry` says when the token stops being valid, `IRates` says how many reserve assets one token is worth. Nothing else about a token is required for modules that just need to ask **“is it still alive?”** or **“what’s the current conversion rate?”**.",
+      "title": "",
+      "id": "32379"
+    },
+    {
+      "type": "highlight",
+      "description": "At line 11 the interface inherits `IErrors`, giving every implementation the common error vocabulary. The three view functions are pure metadata: `isExpired()` saves callers from doing timestamp math, `expiry()` exposes the raw timestamp (0 = never), `issuedAt()` records the block when the derivative was minted. There is no setter – values are immutable once the contract is deployed.",
+      "file": "contracts/interfaces/IExpiry.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 20
+        }
+      ],
+      "title": "",
+      "id": "32380"
+    },
+    {
+      "type": "highlight",
+      "description": "The companion interface focuses on price. `exchangeRate()` returns the `CT↔RA` conversion factor; `updateRate()` is left for governance-controlled implementations to adjust. The **NatSpec** on line 10 clarifies that a rate of 0 deliberately signals “no exchange rate applies” – the pattern used by `LV` tokens that only hold liquidity rather than accrue yield.",
+      "file": "contracts/interfaces/IRates.sol",
+      "highlight": [
+        {
+          "start": 7,
+          "end": 14
+        }
+      ],
+      "title": "",
+      "id": "32382"
+    },
+    {
+      "type": "highlight",
+      "description": "The abstract `Expiry` mix-in implements `IExpiry` once, then any `DS/CT/LV` contract can inherit it. In the constructor it locks in `EXPIRY` and `ISSUED_AT` (line 44-51). The `isExpired()` logic (56-62) makes the **“never expires”** = 0 rule explicit.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 40,
+          "end": 62
+        }
+      ],
+      "title": "",
+      "id": "32384"
+    },
+    {
+      "type": "highlight",
+      "description": "The remaining two view functions are one-liners: `expiry()` just returns the constant, `issuedAt()` exposes the stored block timestamp. Because everything is immutable, gas cost stays minimal.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 64,
+          "end": 73
+        }
+      ],
+      "title": "",
+      "id": "32386"
+    },
+    {
+      "type": "highlight",
+      "description": "`ExchangeRate`, another small mix-in, ties `IRates` to a single storage slot called `rate`. `exchangeRate()` is an external view wrapper (29-31); the value can only be modified by the concrete token’s `updateRate` implementation.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 18,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "32389"
+    },
+    {
+      "type": "highlight",
+      "description": "Here is a real derivative implementation. Asset (used for `DS`, `CT`, `LV` – see comment line 78) inherits both `Expiry` and `ExchangeRate` alongside `ERC20` plumbing, so every instance automatically satisfies the two interfaces.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 78,
+          "end": 86
+        }
+      ],
+      "title": "",
+      "id": "32391"
+    },
+    {
+      "type": "highlight",
+      "description": "Governance control is visible in `updateRate()`: only the **token owner** (typically a **governor** or `ModuleCore`) may write a new rate. External modules (`PSM`, `Vault`, etc.) therefore call `exchangeRate()` for reads but never call `updateRate()`.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 153,
+          "end": 156
+        }
+      ],
+      "title": "",
+      "id": "32392"
+    },
+    {
+      "type": "textOnly",
+      "description": "With this pattern in mind you can recognise calls like `DS.expiry()` to enforce maturity or `RA.exchangeRate()` to compute redemption amounts elsewhere in the protocol. The metadata lives in these two interfaces; the heavy lifting happens in higher-level contracts that consume them.",
+      "title": "",
+      "id": "32393"
+    }
+  ]
+}

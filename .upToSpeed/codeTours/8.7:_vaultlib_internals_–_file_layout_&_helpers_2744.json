@@ -1,0 +1,85 @@
+{
+  "title": "8.7: VaultLib Internals – File Layout & Helpers",
+  "id": "gsy6ZTL8Aa2AdDJ7VGz1QZWSy3wUZlzPOUemRlSRj9o=",
+  "originalId": 2744,
+  "position": 39,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This walkthrough gives you a map of the enormous `VaultLib.sol`.  We will not dig into the mathematics yet – we only want you to know where the different pieces live so you can come back to them later.",
+      "title": "",
+      "id": "32747"
+    },
+    {
+      "type": "highlight",
+      "description": "After the **SPDX line** the file declares the `library` and immediately adds a long block of `using-for` statements. These statements bolt `helper libraries` onto imported structs, letting code read like **object-methods** (e.g. `self.vault.pool.rationedToAmm(…)`). Each helper library extends a specific type, creating method-like syntax for struct interactions throughout the codebase.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 43
+        }
+      ],
+      "title": "",
+      "id": "32748"
+    },
+    {
+      "type": "highlight",
+      "description": "The next tiny section introduces `Tolerance` (two scratch uints) and `initialize`. `initialize` wires the vault to its LV and Redemption-Asset managers; nothing else in the file works until this runs.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 45,
+          "end": 54
+        }
+      ],
+      "title": "",
+      "id": "32749"
+    },
+    {
+      "type": "highlight",
+      "description": "Internal helpers are consistently prefixed with an underscore.  They hide complex state changes behind a short name so the public flows stay readable.  Lines 87-95 show the small `_addFlashSwapReserveLv`; lines 120-132 show `_liquidateIfExpired`, a multi-step orchestration that still remains \"private\" thanks to the underscore.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 87,
+          "end": 132
+        }
+      ],
+      "title": "",
+      "id": "32750"
+    },
+    {
+      "type": "highlight",
+      "description": "`deposit` is the first major public entry point. Every user deposit funnels through here: it locks `RA`, splits `CT`, adds `AMM` liquidity via helpers, then mints `LV`. When you explore a “put money in” scenario, start on this `function`.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 316,
+          "end": 379
+        }
+      ],
+      "title": "",
+      "id": "32751"
+    },
+    {
+      "type": "highlight",
+      "description": "The mirror operation is `redeemEarly`. It begins with balance checks and optional permit handling, then sets up a `RedeemEarlyResult` struct that later helpers will fill with **RA/CT/DS/PA**. This is the front door for early withdrawals.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 613,
+          "end": 642
+        }
+      ],
+      "title": "",
+      "id": "32752"
+    },
+    {
+      "type": "textOnly",
+      "description": "Your mental map: imports & `using-for` at the very top, a tiny setup section, a sea of underscore helpers in the middle, and two headline public flows – `deposit` and `redeemEarly`.  With this orientation you can jump to any section of `VaultLib.sol` without feeling lost.",
+      "title": "",
+      "id": "32753"
+    }
+  ]
+}

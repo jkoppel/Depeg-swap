@@ -1,0 +1,40 @@
+{
+  "title": "12.10: ProtectedUnitFactory – deployment control",
+  "id": "47IMwVjPWvMACvJZWrs8bmJCdtdKADj1jPrqsRQ1OHs=",
+  "originalId": 2851,
+  "position": 71,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "The `ProtectedUnitFactory` exposes four public functions that create, list, and retire `Protected Units (PUs)`. We will inspect each in turn.",
+      "title": "",
+      "id": "34123"
+    },
+    {
+      "type": "highlight",
+      "description": "The `constructor` stores four companion contract addresses and throws if any argument is zero (61-66), ensuring the factory can never be deployed with missing dependencies.",
+      "file": "contracts/core/assets/ProtectedUnitFactory.sol",
+      "highlight": [
+        {
+          "start": 61,
+          "end": 72
+        }
+      ],
+      "title": "",
+      "id": "34124"
+    },
+    {
+      "type": "highlight",
+      "description": "`getDeployedProtectedUnits` returns paginated results. After bounds checks, the for-loop (102-107) walks the index → Id map to populate parallel arrays of PU addresses and their IDs.",
+      "file": "contracts/core/assets/ProtectedUnitFactory.sol",
+      "highlight": [
+        {
+          "start": 82,
+          "end": 108
+        }
+      ],
+      "title": "",
+      "id": "34126"
+    }
+  ]
+}

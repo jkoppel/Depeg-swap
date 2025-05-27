@@ -1,0 +1,124 @@
+{
+  "title": "12.6: ProtectedUnit.sol – Liquidator & admin utilities",
+  "id": "zEau2sQZjekBriS74UkCtKm+lZ+rvBrOKt/SnNTkOXI=",
+  "originalId": 2846,
+  "position": 67,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This walkthrough focuses on the operations reserved for **governance** or **whitelisted liquidators**. Each step highlights the guard-rails that restrict these privileged flows to protect normal depositors.",
+      "title": "",
+      "id": "34104"
+    },
+    {
+      "type": "highlight",
+      "description": "This modifier protects liquidation functions from unauthorized access. Only contracts explicitly whitelisted as liquidators can call functions marked with this modifier, providing a critical security layer for the wrapper's liquidation system.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 143,
+          "end": 148
+        }
+      ],
+      "title": "",
+      "id": "34103"
+    },
+    {
+      "type": "highlight",
+      "description": "`requestLiquidationFunds()` lets an approved liquidator pull `PA` or `RA` from the contract. Three protections are layered:\n- `onlyLiquidationContract` (previous slide)\n- `onlyValidToken` ensures the caller cannot drain `DS` or arbitrary `ERC-20`s.\n- An **InsufficientFunds revert** keeps accounting honest.\nFinally, `autoSync` runs before and after to keep the internal reserve record consistent.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 241,
+          "end": 256
+        }
+      ],
+      "title": "",
+      "id": "34106"
+    },
+    {
+      "type": "highlight",
+      "description": "`receiveFunds()` is the return-leg. Anyone can push `PA/RA` back in but only for those two tokens. `autoSync` updates reserves immediately so subsequent `mint`/`burn` math uses the fresh balances.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 266,
+          "end": 270
+        }
+      ],
+      "title": "",
+      "id": "34109"
+    },
+    {
+      "type": "highlight",
+      "description": "`useFunds()` is the heaviest privileged call.  `onlyOwnerOrLiquidator` restricts access; non-privileged users can’t touch it.\nLine 291 grants a temporary allowance to the `flash-swap router`, and line 293 executes `FLASHSWAP_ROUTER.swapRaforDs()`.  The `amountOutMin` argument forms an on-chain slippage circuit-breaker—if the router cannot deliver at least that many DS tokens, the entire transaction reverts.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 283,
+          "end": 297
+        }
+      ],
+      "title": "",
+      "id": "34110"
+    },
+    {
+      "type": "highlight",
+      "description": "`redeemRaWithDsPa()` is owner-only. After redeeming RA from `ModuleCore` (line `315`) it immediately pauses the whole contract (line `318`). This automatic pause forces human review after a potentially large balance change.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 309,
+          "end": 320
+        }
+      ],
+      "title": "",
+      "id": "34113"
+    },
+    {
+      "type": "highlight",
+      "description": "`updateMintCap()` allows the owner to raise or lower the maximum supply. A `no-op` update (same value) reverts, preventing silent re-emission of the event or accidental txs.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 587,
+          "end": 592
+        }
+      ],
+      "title": "",
+      "id": "34115"
+    },
+    {
+      "type": "highlight",
+      "description": "`pause()` and `unpause()` expose `OpenZeppelin`’s `Pausable` controls so governance can freeze or resume mint/burn flows at will. Every public mint/burn path checks `whenNotPaused`, so these switches are absolute.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 600,
+          "end": 610
+        }
+      ],
+      "title": "",
+      "id": "34117"
+    },
+    {
+      "type": "highlight",
+      "description": "`skim()` is an operational housekeeping tool.  It compares actual balances to recorded reserves and transfers only the surplus to a target address—never touching the assets backing user positions.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 624,
+          "end": 633
+        }
+      ],
+      "title": "",
+      "id": "34119"
+    },
+    {
+      "type": "textOnly",
+      "description": "Together these entry points let governance manage caps, emergencies, and liquidations while strict role checks, slippage limits, reserve-tracking, and automatic pausing shield ordinary users from operator mistakes.",
+      "title": "",
+      "id": "34122"
+    }
+  ]
+}

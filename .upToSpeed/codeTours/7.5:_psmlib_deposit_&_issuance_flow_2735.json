@@ -1,0 +1,98 @@
+{
+  "title": "7.5: PsmLib Deposit & Issuance Flow",
+  "id": "imG/Bz5LEe/DQIkHnSy4Cp+9N443vkXfPabhGx4OxFY=",
+  "originalId": 2735,
+  "position": 29,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "We will trace what happens when a user deposits `Redemption Asset` (RA) into the `PSM` and receives a matching pair of `Claim Token` (CT) and `Depeg-Swap Token` (DS). Each stop in the tour highlights one aspect of the deposit path – validation, price handling, decimal normalisation, token minting, and the way the `Liquidity Vault` mirrors the same logic.",
+      "title": "",
+      "id": "32648"
+    },
+    {
+      "type": "highlight",
+      "description": "The heart of the flow is `deposit()` in `PsmLib`.\n- 334 rejects zero-value deposits.\n- 338 selects the currently issued DS (`globalAssetIdx`).\n- 342 Guard ensures the DS has not expired.\n- 343 fetches the *conservative* exchange-rate via `_getLatestApplicableRateAndUpdate()`.\n- 346 converts `RA` into 18-decimals with `TransferHelper` so `CT` & `DS` share the same unit.\n- 348 locks the user's `RA` inside the contract's balances.\n- 350 `ds.issue()` mints **both** `CT` and `DS` to the depositor – completing the asset transformation.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 328,
+          "end": 351
+        }
+      ],
+      "title": "",
+      "id": "32649"
+    },
+    {
+      "type": "highlight",
+      "description": "The `PSM core contract` delegates to the `library` and emits the on-chain trace:  \n- Line 91 `state.deposit()` executes the logic we just saw.  \n- Line 93 the `PsmDeposited` event records RA in, CT/DS out and the rate used – a single place to audit deposits.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 86,
+          "end": 94
+        }
+      ],
+      "title": "",
+      "id": "32650"
+    },
+    {
+      "type": "highlight",
+      "description": "`TransferHelper` hides the decimal gymnastics.  \n`normalizeDecimals()` (12-28) shifts amounts between decimal systems, and `tokenNativeDecimalsToFixed()` (30-36) lifts any ERC-20 value to a common 18-dec fixed-point.  The call at line 346 of `deposit()` relies on this helper so that 6-dec assets such as USDC behave identically to 18-dec assets when CT & DS are minted.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 36
+        }
+      ],
+      "title": "",
+      "id": "32651"
+    },
+    {
+      "type": "highlight",
+      "description": "`_getLatestApplicableRateAndUpdate()` chooses the price used for the deposit.  It compares the external oracle rate (52-61, not shown) with the current DS rate and stores the lower one (75) to protect the system from optimistic pricing.  This call is what line 343 in `deposit()` hooks into.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 64,
+          "end": 76
+        }
+      ],
+      "title": "",
+      "id": "32652"
+    },
+    {
+      "type": "highlight",
+      "description": "`unsafeIssueToLv()` mirrors the same minting logic for the Liquidity Vault.  It locks `RA` (364), converts to fixed decimals (367), refreshes the rate (369), and `ds.issue()` mints `CT/DS` (`371`) – ensuring `LV`’s internal balances stay in sync with user deposits.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 358,
+          "end": 371
+        }
+      ],
+      "title": "",
+      "id": "32653"
+    },
+    {
+      "type": "highlight",
+      "description": "`MathHelper.calculateDepositAmountWithExchangeRate` – referenced elsewhere when the system needs to preview deposits or repurchases – encapsulates the same exchange-rate math.  We do not need it for the straight deposit path, but it is the counterpart used when converting amounts in the opposite direction.",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 67,
+          "end": 75
+        }
+      ],
+      "title": "",
+      "id": "32654"
+    },
+    {
+      "type": "textOnly",
+      "description": "To recap:  \n1️⃣ `depositPsm` → `state.deposit()` validates inputs.  \n2️⃣ `_getLatestApplicableRateAndUpdate()` injects a safe price.  \n3️⃣ `TransferHelper` normalises RA so CT/DS can be minted 1:1.  \n4️⃣ `ds.issue()` hands the user freshly minted CT + DS, and `PsmDeposited` logs the details.  \n5️⃣ The same recipe powers `unsafeIssueToLv()` so the Liquidity Vault’s accounting tokens always match user supply.",
+      "title": "",
+      "id": "32655"
+    }
+  ]
+}

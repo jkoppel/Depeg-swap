@@ -1,0 +1,143 @@
+{
+  "title": "14.3: LpHelper & ILpHelper – Inspecting Uni V4 Liquidity",
+  "id": "pNkq6zuO7A5kod5OAoPbsM0Wu3SYYni6+uEDatcPfoY=",
+  "originalId": 2870,
+  "position": 78,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "A **thin on-chain reader** delegates every heavy-lifting question to already-trusted contracts. This walkthrough follows how it turns a `market-id` or an `LP token address` into fresh `Uni V4 reserve data` and the current `liquidity-token address`.",
+      "title": "",
+      "id": "34353"
+    },
+    {
+      "type": "highlight",
+      "description": "Two collaborators are stored immutably – the `Uni V4 hook`, which owns all `LiquidityTokens`, and the protocol’s `ModuleCore`.  `Helper contracts` keep no state of their own; they lean on these **single sources of truth** for every answer.",
+      "file": "contracts/offchain-helpers/LpHelper.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 14
+        }
+      ],
+      "title": "",
+      "id": "34354"
+    },
+    {
+      "type": "highlight",
+      "description": "The constructor wires those collaborators once and forever, guaranteeing that every later read uses the same, trusted endpoints instead of any off-chain recomputation.",
+      "file": "contracts/offchain-helpers/LpHelper.sol",
+      "highlight": [
+        {
+          "start": 16,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "34355"
+    },
+    {
+      "type": "highlight",
+      "description": "This security check ensures only legitimate LP tokens managed by the hook can be queried. The owner verification protects callers from accidentally or maliciously using arbitrary ERC-20 tokens, failing fast with **InvalidToken** if the check fails.",
+      "file": "contracts/offchain-helpers/LpHelper.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 25
+        }
+      ],
+      "title": "",
+      "id": "34356"
+    },
+    {
+      "type": "highlight",
+      "description": "Once verified, the LP’s symbol is parsed into RA & CT addresses (`l 26`) and the hook is asked for the live reserves (`l 28-29`).  Nothing is cached locally – the helper simply relays authoritative data.",
+      "file": "contracts/offchain-helpers/LpHelper.sol",
+      "highlight": [
+        {
+          "start": 26,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "34357"
+    },
+    {
+      "type": "highlight",
+      "description": "When a caller supplies only a `market-id` the public overloads (`l 31-38`) funnel into `_getReserve` (`l 40-43`).  This function still ends with `hook.getReserves`, but first must discover the actual token pair belonging to that market and epoch.",
+      "file": "contracts/offchain-helpers/LpHelper.sol",
+      "highlight": [
+        {
+          "start": 31,
+          "end": 43
+        }
+      ],
+      "title": "",
+      "id": "34358"
+    },
+    {
+      "type": "highlight",
+      "description": "`_getRaCt` bridges the id-to-token gap: `markets(id)` yields the RA address (l 46) while `swapAsset(id, epoch)` yields the CT address (l 48). The resulting pair is exactly what the hook understands.",
+      "file": "contracts/offchain-helpers/LpHelper.sol",
+      "highlight": [
+        {
+          "start": 45,
+          "end": 49
+        }
+      ],
+      "title": "",
+      "id": "34359"
+    },
+    {
+      "type": "highlight",
+      "description": "`getLpToken(Id)` re-uses the same lookup pattern. After resolving `RA` & `CT` it finishes with `hook.getLiquidityToken`, returning the LP token address for the latest epoch.",
+      "file": "contracts/offchain-helpers/LpHelper.sol",
+      "highlight": [
+        {
+          "start": 51,
+          "end": 56
+        }
+      ],
+      "title": "",
+      "id": "34360"
+    },
+    {
+      "type": "highlight",
+      "description": "A second overload lets analytics query any historical epoch by passing an explicit `dsId`, yet the internal flow is identical – resolve `RA` & `CT`, then ask the hook.",
+      "file": "contracts/offchain-helpers/LpHelper.sol",
+      "highlight": [
+        {
+          "start": 58,
+          "end": 62
+        }
+      ],
+      "title": "",
+      "id": "34361"
+    },
+    {
+      "type": "highlight",
+      "description": "`ILpHelper` lists every public function we just explored, 1-for-1. Splitting the **ABI** into a stand-alone interface lets other contracts or type-safe scripts depend on the helper without embedding its **bytecode**.",
+      "file": "contracts/interfaces/offchain-helpers/ILpHelper.sol",
+      "highlight": [
+        {
+          "start": 11,
+          "end": 48
+        }
+      ],
+      "title": "",
+      "id": "34362"
+    },
+    {
+      "type": "textOnly",
+      "description": "This decoupling means modules can compile against the helper today and upgrade its implementation tomorrow with no downstream changes.",
+      "title": "",
+      "id": "34363"
+    },
+    {
+      "type": "textOnly",
+      "description": "Typical consumers include `analytics dashboards` charting `RA/CT liquidity`, `keeper bots` spotting imbalance before re-weighing, and `front-end widgets` that need the current `LP token address` to build `add-liquidity transactions`.",
+      "title": "",
+      "id": "34364"
+    }
+  ]
+}

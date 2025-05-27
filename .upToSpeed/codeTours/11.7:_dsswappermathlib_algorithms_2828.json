@@ -1,0 +1,162 @@
+{
+  "title": "11.7: DsSwapperMathLib Algorithms",
+  "id": "9g4TkUdayxmLeYoJWXkqNhbGRqq8AXKnSskcUrmOcN0=",
+  "originalId": 2828,
+  "position": 58,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This tour continues the buy-side path, zooming in on the maths that the router outsources to the library layer.\nWe will:\n- inspect rollover-sale maths (`calculateRolloverSale`)\n- follow dynamic sell-pressure (`determineSellPressure` → `calculateOptimalSellPressure`)\n- see how the generic **percentage-fee helper** is reused\nA concrete walk-through with `1 000 RA`, `hiya = 0.2` and a `90 %` pressure-threshold lets you recompute every number yourself.",
+      "title": "",
+      "id": "33989"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router` tries rollover sales first. The call at line 271 invokes `_swapRaForDsViaRollover`. Lines 277–283 show guard clauses that skip rollover when not applicable.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 270,
+          "end": 283
+        }
+      ],
+      "title": "",
+      "id": "33990"
+    },
+    {
+      "type": "highlight",
+      "description": "Public façade `calculateRolloverSale`. Lines 364–367 convert inputs into `UD60x18` fixed-point and compute `hpa = 1 − ptConstFixed(hiya)`, i.e. the current DS price in RA. Line 376 forwards everything into the pure solver, then unwraps six outputs.",
+      "file": "contracts/libraries/DsSwapperMathLib.sol",
+      "highlight": [
+        {
+          "start": 352,
+          "end": 368
+        }
+      ],
+      "title": "",
+      "id": "33999"
+    },
+    {
+      "type": "highlight",
+      "description": "Stage 1 of `_calculateRolloverSale`: size the trade and cap it.\n- line 310 computes `dsReceived = raProvided ÷ hpa`.\n- lines 312–321 cap `dsReceived` to `totalDsReserve` and compute `raLeft` when `reserve < entitlement`.",
+      "file": "contracts/libraries/DsSwapperMathLib.sol",
+      "highlight": [
+        {
+          "start": 308,
+          "end": 321
+        }
+      ],
+      "title": "",
+      "id": "34002"
+    },
+    {
+      "type": "highlight",
+      "description": "**Stage 2 & 3**: debit `DS` from `LV` & `PSM` pro-rata (lines 326–330), rebalance if any side over-draws (333–343), then line 347–349 value those `DS` at `hpa` to produce `lvProfit` and `psmProfit`.",
+      "file": "contracts/libraries/DsSwapperMathLib.sol",
+      "highlight": [
+        {
+          "start": 326,
+          "end": 350
+        }
+      ],
+      "title": "",
+      "id": "34005"
+    },
+    {
+      "type": "textOnly",
+      "description": "**Worked example – rollover sale (all values 18-dec fixed):**\nInput: `lvReserve` = **3 000 DS**, `psmReserve` = **2 000 DS**, `raProvided` = **1 000 RA**, `hiya` = 0.2\n1. `ptConstFixed(0.2)` = 1 ÷ 1.2 = 0.833333\n2. `hpa` = 1 − 0.833333 = 0.166666\n3. `dsEntitlement` = 1 000 ÷ 0.166666 ≈ **6 000 DS** → capped to **5 000 DS**, so `raLeft` ≈ 166.667 RA\n4. LV share 60 % (**3 000 DS**), PSM share 40 % (**2 000 DS**)\n5. Profits: 3 000×0.166666≈500 RA to LV, 2 000×0.166666≈333.333 RA to PSM (500+333.333+166.667=1 000)",
+      "title": "",
+      "id": "34004"
+    },
+    {
+      "type": "highlight",
+      "description": "`determineSellPressure` applies on every buy. Lines 113–121 return 0 if no threshold is set; otherwise it delegates the triple (`raProvided`, `dsOut`, `threshold`) into `SwapperMathLibrary.calculateOptimalSellPressure`.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 113,
+          "end": 130
+        }
+      ],
+      "title": "",
+      "id": "34186"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateOptimalSellPressure` determines the spot risk premium by first normalizing the time parameters, then calculating an effective DS price. If this price exceeds 1, we skip further calculations since selling would be unprofitable. The core calculation then derives the current risk premium based on the normalized time and price.",
+      "file": "contracts/libraries/DsSwapperMathLib.sol",
+      "highlight": [
+        {
+          "start": 226,
+          "end": 246
+        }
+      ],
+      "title": "",
+      "id": "34187"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateOptimalSellPressureWithRiskPremium` treats threshold as a target premium:\npressure = (`currentRiskPremium` / (`threshold`/100)) × 100, then capped at `SELL_PRESSURE_CAP` (95 %). Lines 447–456 implement the cap.",
+      "file": "contracts/libraries/DsSwapperMathLib.sol",
+      "highlight": [
+        {
+          "start": 431,
+          "end": 456
+        }
+      ],
+      "title": "",
+      "id": "34188"
+    },
+    {
+      "type": "textOnly",
+      "description": "Numeric continuation with 90 % threshold:\n- `effectiveDsPrice = 1 000 RA ÷ 5 000 DS = 0.2`\n- assume `t≈0.5` → `spotARP = (1/0.8)^(1/0.5) −1 ≈0.5625` (56.25 %)\n- threshold `y=90 %` → `y/100=0.9` → `pressure=(0.5625/0.9)×100 ≈62.5 %` (<95 % cap)",
+      "title": "",
+      "id": "34189"
+    },
+    {
+      "type": "highlight",
+      "description": "**calculateSellFromReserve** applies that pressure:\n- **line 408** fetches `sellPressure`.\n- **line 410** computes `amountSellFromReserve = amountOut - calculatePercentageFee(sellPressure, amountOut)`.\n- **lines 414–416** cap the sale by total reserve to prevent overdrawing.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 401,
+          "end": 417
+        }
+      ],
+      "title": "",
+      "id": "34190"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculatePercentageFee` lives in `MathHelper` and simply delegates to `SwapperMathLibrary.calculatePercentage`, implementing `amount×percentage ÷ 100` at 18-dec precision.",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 55,
+          "end": 62
+        }
+      ],
+      "title": "",
+      "id": "34191"
+    },
+    {
+      "type": "highlight",
+      "description": "The core percentage logic (`SwapperMathLibrary.calculatePercentage`) does `UD60x18` multiplication and division by `100`, unwrapping back to `uint256`. All modules reuse this for fees, pressure, etc.",
+      "file": "contracts/libraries/DsSwapperMathLib.sol",
+      "highlight": [
+        {
+          "start": 197,
+          "end": 203
+        }
+      ],
+      "title": "",
+      "id": "34192"
+    },
+    {
+      "type": "textOnly",
+      "description": "Key levers now in your control:\n- `hiya` (per reserve) drives DS pricing during rollover – lower `hiya` ⇒ higher `hpa` ⇒ fewer `DS`.\n- `reserveSellPressurePercentageThreshold` sets how aggressive reserve sell-downs become.\n- Any 1e18-scaled percentage anywhere can use `calculatePercentage` / `calculatePercentageFee`.\nHeavy maths live in `DsSwapperMathLib` so you only need to tweak formulas in one place without touching the router.",
+      "title": "",
+      "id": "34193"
+    }
+  ]
+}

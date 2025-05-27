@@ -1,0 +1,79 @@
+{
+  "title": "14.1: Utility & Off-chain Helpers: Overview",
+  "id": "DuW+qg6YGsYk5Bmy6ZNr6mlzh12eJDNeL0rpKcmqG8Y=",
+  "originalId": 2868,
+  "position": 76,
+  "steps": [
+    {
+      "type": "highlight",
+      "description": "A lightweight `Uniswap-V2` spot-price reader: the header advertises its purpose and the `contract` declaration wires in the `factory` & `router` used for look-ups.",
+      "file": "contracts/readers/PriceReader.sol",
+      "highlight": [
+        {
+          "start": 6,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "34340"
+    },
+    {
+      "type": "highlight",
+      "description": "`getTokenPrice()` is the contract’s single public view method—builds a two-token path and returns a quoted amount from the `router`.",
+      "file": "contracts/readers/PriceReader.sol",
+      "highlight": [
+        {
+          "start": 23,
+          "end": 34
+        }
+      ],
+      "title": "",
+      "id": "34341"
+    },
+    {
+      "type": "highlight",
+      "description": "Uniswap-V4 liquidity-pool introspection helper: two immutable references—`hook` (`DEX data`) and `moduleCore` (`market metadata`)—keep every query strictly read-only.",
+      "file": "contracts/offchain-helpers/LpHelper.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "34342"
+    },
+    {
+      "type": "highlight",
+      "description": "First public API: `getReserve(address)` validates the LP token, parses its symbol, and fetches the current RA/CT reserves.",
+      "file": "contracts/offchain-helpers/LpHelper.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "34343"
+    },
+    {
+      "type": "highlight",
+      "description": "`ILpHelper` mirrors the helper’s surface so external contracts or off-chain scripts can rely on the same read-only functions without linking the implementation.",
+      "file": "contracts/interfaces/offchain-helpers/ILpHelper.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "34344"
+    },
+    {
+      "type": "textOnly",
+      "description": "All three artefacts are **view-only utilities**—ideal for dashboards, keeper bots, and analytics pipelines that need fresh prices or LP stats without touching protocol state.",
+      "title": "",
+      "id": "34345"
+    }
+  ]
+}

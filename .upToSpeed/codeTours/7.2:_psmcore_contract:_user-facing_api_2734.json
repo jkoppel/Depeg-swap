@@ -1,0 +1,137 @@
+{
+  "title": "7.2: PsmCore Contract: User-Facing API",
+  "id": "IiFryl4MXl+IjUIop9kOe4irWeqEFGAPYW1SceCxcUQ=",
+  "originalId": 2734,
+  "position": 26,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "`PsmCore` is intentionally lightweight: it enforces guards, selects the right `State` object and then calls `PsmLibrary` where every real algorithm lives.  The next stops make that hand-off pattern concrete.",
+      "title": "",
+      "id": "32535"
+    },
+    {
+      "type": "highlight",
+      "description": "The contract imports the `library` and ties it to the `State` struct (18-19). Because it also inherits `ModuleState` (17), `PsmCore` already has the `states` storage mapping in scope.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 20
+        }
+      ],
+      "title": "",
+      "id": "32536"
+    },
+    {
+      "type": "highlight",
+      "description": "`ModuleState` provides the `using PsmLibrary for State` directive (22) and the `mapping(Id => State) states` store (24). Every wrapper method we're about to see begins by reading from this map.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 26
+        }
+      ],
+      "title": "",
+      "id": "32537"
+    },
+    {
+      "type": "highlight",
+      "description": "`depositPsm` follows the wrapper recipe: (1) guards (`onlyInitialized`, `PSMDepositNotPaused`) lines 87-89; (2) grab the **State** (90); (3) delegate to `state.deposit` (92); (4) emit `PsmDeposited` (93).",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 86,
+          "end": 94
+        }
+      ],
+      "title": "",
+      "id": "32538"
+    },
+    {
+      "type": "highlight",
+      "description": "repurchase mirrors the same structure – guard on `48`, State lookup `50`, `library` call `52-53`, then event `55-56`.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 35,
+          "end": 56
+        }
+      ],
+      "title": "",
+      "id": "32539"
+    },
+    {
+      "type": "highlight",
+      "description": "`redeemRaWithDsPa` (**permit version**) adds a signature sanity check (107-109) but otherwise keeps the pattern: **guard** 104-105, **State** 110, **library** 112-113, **event** 115-117.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 96,
+          "end": 118
+        }
+      ],
+      "title": "",
+      "id": "32540"
+    },
+    {
+      "type": "highlight",
+      "description": "`redeemWithExpiredCt` shows the withdrawal path: guards 165-166, `State` 171, `library` 173, `event` 175.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 157,
+          "end": 176
+        }
+      ],
+      "title": "",
+      "id": "32541"
+    },
+    {
+      "type": "highlight",
+      "description": "`rolloverExpiredCt` keeps the same skeleton for rollover logic – `guard` 277, `State` 281, `library` 282-283, `event` 284-285.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 269,
+          "end": 285
+        }
+      ],
+      "title": "",
+      "id": "32542"
+    },
+    {
+      "type": "highlight",
+      "description": "A view helper like `repurchaseFee` is pure delegation: get `State (26)` then forward (`27`).  No business logic lives here.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 25,
+          "end": 28
+        }
+      ],
+      "title": "",
+      "id": "32543"
+    },
+    {
+      "type": "highlight",
+      "description": "`valueLocked` repeats the same forwarding pattern for both function overloads, reinforcing that `PsmCore`’s role is just a façade.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 198,
+          "end": 206
+        }
+      ],
+      "title": "",
+      "id": "32544"
+    },
+    {
+      "type": "textOnly",
+      "description": "Across deposits, repurchases, redemptions and rollovers the flow never changes: pause/ACL guard → `states[id]` → `PsmLibrary` call → event.  All substantive rules live in the shared library, leaving `PsmCore` easy to read and audit.",
+      "title": "",
+      "id": "32545"
+    }
+  ]
+}

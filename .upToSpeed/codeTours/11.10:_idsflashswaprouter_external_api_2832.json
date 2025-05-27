@@ -1,0 +1,442 @@
+{
+  "title": "11.10: IDsFlashSwapRouter External API",
+  "id": "mbQG8GyTr8fawq7CPEq1bmsgoDE/xw/7VYLwIKoQcuE=",
+  "originalId": 2832,
+  "position": 61,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This walkthrough maps every function in `IDsFlashSwapRouter.sol` into four groups:\n\n- View helpers (unrestricted)\n- Swap variants (unrestricted)\n- Reserve management (`onlyModuleCore`)\n- Admin setters (`onlyConfig`)\n\nEach step shows the interface signature, its purpose, the implementing lines in `FlashSwapRouter`, and permission gates—so you can integrate or audit without reopening implementation files.",
+      "title": "",
+      "id": "34366"
+    },
+    {
+      "type": "highlight",
+      "description": "Important types used by integrators when calling swap functions\n\nThese must be imported to construct `RA→DS swap calls`.",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 70,
+          "end": 109
+        }
+      ],
+      "title": "",
+      "id": "34368"
+    },
+    {
+      "type": "highlight",
+      "description": "**View helpers** – fetch on-chain state for pricing and reserves (unrestricted).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 20,
+          "end": 28
+        }
+      ],
+      "title": "",
+      "id": "34369"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router` implementation of **HIYA metrics** (unrestricted).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 160,
+          "end": 166
+        }
+      ],
+      "title": "",
+      "id": "34372"
+    },
+    {
+      "type": "highlight",
+      "description": "View helpers – liquidity reserves (unrestricted).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 32,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "34373"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router` surfaces `AMM` reserves and `LV balance` (unrestricted).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 210,
+          "end": 217
+        }
+      ],
+      "title": "",
+      "id": "34376"
+    },
+    {
+      "type": "highlight",
+      "description": "View helpers – cumulative `HIYA` (unrestricted).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 50,
+          "end": 55
+        }
+      ],
+      "title": "",
+      "id": "34378"
+    },
+    {
+      "type": "highlight",
+      "description": "View function that returns the current effective HIYA value (unrestricted).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 61,
+          "end": 62
+        }
+      ],
+      "title": "",
+      "id": "34379"
+    },
+    {
+      "type": "highlight",
+      "description": "`View helper` – price ratio and rollover flag (unrestricted).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 313,
+          "end": 324
+        }
+      ],
+      "title": "",
+      "id": "34382"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router` computes current price ratio via `hook` (unrestricted).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 252,
+          "end": 259
+        }
+      ],
+      "title": "",
+      "id": "34384"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router` exposes `isRolloverSale` flag (unrestricted).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 533,
+          "end": 535
+        }
+      ],
+      "title": "",
+      "id": "34385"
+    },
+    {
+      "type": "highlight",
+      "description": "`RA`→`DS` swaps – simple overload (unrestricted).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 254,
+          "end": 262
+        }
+      ],
+      "title": "",
+      "id": "34387"
+    },
+    {
+      "type": "highlight",
+      "description": "`RA→DS swaps` – permit overload (unrestricted).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 272,
+          "end": 281
+        }
+      ],
+      "title": "",
+      "id": "34390"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router`’s permit-based RA→DS path (unrestricted).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 451,
+          "end": 459
+        }
+      ],
+      "title": "",
+      "id": "34392"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router`’s simple `RA→DS` overload (unrestricted).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 522,
+          "end": 531
+        }
+      ],
+      "title": "",
+      "id": "34394"
+    },
+    {
+      "type": "highlight",
+      "description": "`DS→RA swaps` – simple overload (unrestricted).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 291,
+          "end": 299
+        }
+      ],
+      "title": "",
+      "id": "34395"
+    },
+    {
+      "type": "highlight",
+      "description": "`DS`→`RA` swaps – permit overload (unrestricted).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 303,
+          "end": 310
+        }
+      ],
+      "title": "",
+      "id": "34397"
+    },
+    {
+      "type": "highlight",
+      "description": "**Router**’s permit-based DS→RA path (unrestricted).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 537,
+          "end": 544
+        }
+      ],
+      "title": "",
+      "id": "34400"
+    },
+    {
+      "type": "highlight",
+      "description": "Router’s simple `DS→RA` **overload** (unrestricted).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 588,
+          "end": 594
+        }
+      ],
+      "title": "",
+      "id": "34401"
+    },
+    {
+      "type": "highlight",
+      "description": "Reserve management hooks – initialization and decay (`onlyModuleCore`).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 192,
+          "end": 204
+        }
+      ],
+      "title": "",
+      "id": "34404"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router`’s `onNewIssuance` implementation (`onlyModuleCore`).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 188,
+          "end": 196
+        }
+      ],
+      "title": "",
+      "id": "34405"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router` sets **decay discount** and **rollover period** (`onlyModuleCore`).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 199,
+          "end": 208
+        }
+      ],
+      "title": "",
+      "id": "34408"
+    },
+    {
+      "type": "highlight",
+      "description": "Reserve management – adding `DS` to `LV` or `PSM` (`onlyModuleCore`).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 217,
+          "end": 224
+        }
+      ],
+      "title": "",
+      "id": "34409"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router` `addReserveLv` and `addReservePsm` (`onlyModuleCore`).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 261,
+          "end": 269
+        }
+      ],
+      "title": "",
+      "id": "34411"
+    },
+    {
+      "type": "highlight",
+      "description": "**Reserve management** – empty full or partial **DS** reserves (`onlyModuleCore`).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 227,
+          "end": 235
+        }
+      ],
+      "title": "",
+      "id": "34413"
+    },
+    {
+      "type": "highlight",
+      "description": "**Router** `emptyReserveLv` and `emptyReservePsm` (`onlyModuleCore`).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 222,
+          "end": 230
+        }
+      ],
+      "title": "",
+      "id": "34415"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router` `emptyReservePartialLv` (onlyModuleCore).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 227,
+          "end": 235
+        }
+      ],
+      "title": "",
+      "id": "34417"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router` `emptyReservePartialPsm` (onlyModuleCore).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 242,
+          "end": 249
+        }
+      ],
+      "title": "",
+      "id": "34420"
+    },
+    {
+      "type": "highlight",
+      "description": "`Admin setters` – `DS fee parameters` (`onlyConfig`).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 207,
+          "end": 215
+        }
+      ],
+      "title": "",
+      "id": "34421"
+    },
+    {
+      "type": "highlight",
+      "description": "Router `updateDsExtraFeePercentage` & `updateDsExtraFeeTreasurySplitPercentage` (`onlyConfig`).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 145,
+          "end": 158
+        }
+      ],
+      "title": "",
+      "id": "34424"
+    },
+    {
+      "type": "highlight",
+      "description": "Admin setters – sale parameters (`onlyConfig`).",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 313,
+          "end": 321
+        }
+      ],
+      "title": "",
+      "id": "34425"
+    },
+    {
+      "type": "highlight",
+      "description": "Router `updateDiscountRateInDdays` & `updateGradualSaleStatus` (`onlyConfig`).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 133,
+          "end": 143
+        }
+      ],
+      "title": "",
+      "id": "34428"
+    },
+    {
+      "type": "highlight",
+      "description": "`Router` `updateReserveSellPressurePercentage` (`onlyConfig`).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 178,
+          "end": 182
+        }
+      ],
+      "title": "",
+      "id": "34430"
+    },
+    {
+      "type": "textOnly",
+      "description": "Here we see two key function types: unrestricted swap functions that anyone can call, and protected configuration functions that only admins can access.",
+      "title": "",
+      "id": "34429"
+    },
+    {
+      "type": "textOnly",
+      "description": "**Integration checklist:**\n\n- Import `IDsFlashSwapCore` and set router address\n- Call `getCurrentPriceRatio` / `getAmmReserve` for state\n- Execute `swapRaforDs` or `swapDsforRa` (with permit for gas savings)\n- For reserve ops, ensure caller has `MODULE_CORE` role\n- For admin tweaks, ensure caller has `CONFIG` role\n- Verify slippage (`amountOutMin`) and deadlines when using permits",
+      "title": "",
+      "id": "34431"
+    }
+  ]
+}

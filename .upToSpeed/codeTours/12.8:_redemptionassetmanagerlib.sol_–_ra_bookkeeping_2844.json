@@ -1,0 +1,85 @@
+{
+  "title": "12.8: RedemptionAssetManagerLib.sol – RA bookkeeping",
+  "id": "VVACcFN4/Ke9Jt08B948oaf8iT2YgtQqTEb3UBFUKd4=",
+  "originalId": 2844,
+  "position": 69,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This walkthrough covers the helper that tracks and moves `redemption assets` (**RA**). The tour examines how balances move between `locked`, `free`, and the `ERC-20 token` itself during a **liquidation life-cycle**.",
+      "title": "",
+      "id": "34016"
+    },
+    {
+      "type": "highlight",
+      "description": "The struct manages redemption assets with three fields:\n- `_address` – the ERC-20 contract address\n- `locked` – amount reserved for active liquidations\n- `free` – available amount for protocol use",
+      "file": "contracts/libraries/RedemptionAssetManagerLib.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 14
+        }
+      ],
+      "title": "",
+      "id": "34017"
+    },
+    {
+      "type": "highlight",
+      "description": "`initialize()` is called once when the manager is created.  It stores the token address and zero-initialises both counters.",
+      "file": "contracts/libraries/RedemptionAssetManagerLib.sol",
+      "highlight": [
+        {
+          "start": 25,
+          "end": 27
+        }
+      ],
+      "title": "",
+      "id": "34018"
+    },
+    {
+      "type": "highlight",
+      "description": "Three tiny helpers mutate the counters without touching tokens:\n- `incLocked` (lines 34-36) adds to `locked` when new RA is pledged.\n- `convertAllToFree` (line 38-47) moves everything from `locked` → `free` once a liquidation ends.\n- `decLocked` (lines 49-51) subtracts from `locked` right before payout.\nThese functions preserve the invariant **total = locked + free**.",
+      "file": "contracts/libraries/RedemptionAssetManagerLib.sol",
+      "highlight": [
+        {
+          "start": 34,
+          "end": 51
+        }
+      ],
+      "title": "",
+      "id": "34019"
+    },
+    {
+      "type": "highlight",
+      "description": "`lockFrom()` shows how the protocol safely pulls RA from external accounts. It splits the operation into two steps - first updating the internal accounting, then performing the transfer. This separation ensures that if the transfer fails, SafeERC20 will unwind the whole call, preventing the accounting from getting out of sync.",
+      "file": "contracts/libraries/RedemptionAssetManagerLib.sol",
+      "highlight": [
+        {
+          "start": 53,
+          "end": 60
+        }
+      ],
+      "title": "",
+      "id": "34020"
+    },
+    {
+      "type": "highlight",
+      "description": "`unlockTo()` serves as the mirror operation to lockFrom(). It follows the same safety pattern we saw earlier - first updating the accounting of locked tokens, then performing the actual transfer. This two-step process ensures that if the transfer fails, the accounting changes are also reverted, maintaining system consistency.",
+      "file": "contracts/libraries/RedemptionAssetManagerLib.sol",
+      "highlight": [
+        {
+          "start": 62,
+          "end": 69
+        }
+      ],
+      "title": "",
+      "id": "34021"
+    },
+    {
+      "type": "textOnly",
+      "description": "With these five primitives the liquidation engine can:\n- lock user assets while an auction is running,\n- convert them back to the free pool once completed, or\n- pay them out — all while relying on `SafeERC20` to ensure storage and on-chain balances always match.",
+      "title": "",
+      "id": "34022"
+    }
+  ]
+}

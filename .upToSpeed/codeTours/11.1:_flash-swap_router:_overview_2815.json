@@ -1,0 +1,137 @@
+{
+  "title": "11.1: Flash-Swap Router: Overview",
+  "id": "fssdY2O+9jHNG2wjvOBt1/SRzeLRugZgcZF+y+/K8y4=",
+  "originalId": 2815,
+  "position": 52,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This short tour names every `Solidity` file that participates in a flash-swap and shows the exact structs or helpers the router relies on, leaving in-depth maths for later.",
+      "title": "",
+      "id": "33701"
+    },
+    {
+      "type": "highlight",
+      "description": "`FlashSwapRouter` owns the whole subsystem. The `mapping` at `line 49` stores one `ReserveState` per `RA/CT` pair; every swap, rollover or reserve-admin operation reads or mutates this map.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 46,
+          "end": 52
+        }
+      ],
+      "title": "",
+      "id": "33702"
+    },
+    {
+      "type": "highlight",
+      "description": "The router also orchestrates each flash-swap.  **`flashSwap` packages borrow amounts into `CallbackData`** and hands them to the `UniV4` hook, teeing up the callback that will settle profit and repayment.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 622,
+          "end": 639
+        }
+      ],
+      "title": "",
+      "id": "33703"
+    },
+    {
+      "type": "highlight",
+      "description": "`AssetPair` (one per `DS` issuance) stores the three tokens plus the router-held `DS` reserves: `lvReserve` for the `Liquidity Vault` and `psmReserve` for the `PSM`.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 16,
+          "end": 27
+        }
+      ],
+      "title": "",
+      "id": "33704"
+    },
+    {
+      "type": "highlight",
+      "description": "`ReserveState` is what the `router` keeps in its mapping. Besides the `ds mapping` it tracks sell-pressure thresholds, cumulative HIYA stats, rollover window, decay rate and optional extra-fee settings.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 32,
+          "end": 45
+        }
+      ],
+      "title": "",
+      "id": "33705"
+    },
+    {
+      "type": "highlight",
+      "description": "`determineSellPressure` translates a user’s trade into a percentage via `SwapperMathLibrary.calculateOptimalSellPressure`; the router calls this after every buy to decide whether to liquidate some reserve `DS`.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 113,
+          "end": 131
+        }
+      ],
+      "title": "",
+      "id": "33706"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateRolloverSale` drives rollover maths.  It splits the user-supplied `RA` between `LV` and `PSM` reserves, computes profits, reserve deltas and any `RA` left that must still be sent through the `AMM`.",
+      "file": "contracts/libraries/DsSwapperMathLib.sol",
+      "highlight": [
+        {
+          "start": 352,
+          "end": 384
+        }
+      ],
+      "title": "",
+      "id": "33707"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateOptimalSellPressure` (called from `determineSellPressure`) caps reserve sell-pressure at **95 %**. This keeps router-initiated DS liquidations from overwhelming the pool.",
+      "file": "contracts/libraries/DsSwapperMathLib.sol",
+      "highlight": [
+        {
+          "start": 226,
+          "end": 249
+        }
+      ],
+      "title": "",
+      "id": "33708"
+    },
+    {
+      "type": "highlight",
+      "description": "`RETURN_SLOT_BUY`, `RETURN_SLOT_SELL`, `REFUNDED_SLOT` and `DS_FEE_AMOUNT` are transient `TSTORE` locations. Inner calls write results here; the router’s `autoClearReturnData` modifier wipes them before returning to the user.",
+      "file": "contracts/libraries/ReturnDataSlotLib.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 16
+        }
+      ],
+      "title": "",
+      "id": "33709"
+    },
+    {
+      "type": "highlight",
+      "description": "The external ABI exposes two swap directions (`swapRaforDs` & `swapDsforRa`, each with a `permit` variant). Earlier in this file you will also find view helpers and reserve-management functions used by `ModuleCore`.",
+      "file": "contracts/interfaces/IDsFlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 254,
+          "end": 304
+        }
+      ],
+      "title": "",
+      "id": "33710"
+    },
+    {
+      "type": "textOnly",
+      "description": "Overall path: user ➜ `FlashSwapRouter.swap*` ➜ `ReserveState` & `DsSwapperMathLib` decide borrow / rollover / reserve-sale ➜ `__flashSwap` asks `UniV4 Hook` for a flash-loan ➜ Hook calls `CorkCall` ➜ router deposits to `PSM` or `Vault`, repays loan, updates `ReserveState` & `HIYA`, emits events, clears `ReturnData` slots.  You can now name every file in that sequence and why it matters.",
+      "title": "",
+      "id": "33711"
+    }
+  ]
+}

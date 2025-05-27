@@ -1,0 +1,86 @@
+{
+  "title": "6.1: Withdrawal Module: Overview",
+  "id": "DWmSzRskDfIWh3uBCMnVtBCMT7Ui9TRr3MOABEs2A5k=",
+  "originalId": 2729,
+  "position": 22,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "We begin with a quick orientation: three **Solidity** sources make up the `Withdrawal` component – one implementation contract and two small interfaces that describe its public surface.",
+      "title": "",
+      "id": "32486"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "contracts/core/Withdrawal.sol"
+      ],
+      "description": "**This is the only implementation contract.** It receives tokens from the `Vault`, escrows them, and allows the `owner` to claim once a mandatory cool-down has elapsed.",
+      "title": "",
+      "id": "32487"
+    },
+    {
+      "type": "highlight",
+      "description": "The queued-withdrawal record lives in `WithdrawalInfo` (12-16): it keeps the unlock time, the authorised owner, and the token list.  A fixed **DELAY** constant (line 18) enforces a 3-day cool-down before any claim can succeed.",
+      "file": "contracts/core/Withdrawal.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "32488"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "contracts/interfaces/IWithdrawal.sol"
+      ],
+      "description": "`IWithdrawal` is the interface implemented by the previous contract. It contains exactly the user-facing entry-points and lifecycle events – nothing more.",
+      "title": "",
+      "id": "32489"
+    },
+    {
+      "type": "highlight",
+      "description": "Highlighted here are the three public actions and two events:\n- `add` – queue a new withdrawal\n- `claimToSelf` – take funds directly\n- `claimRouted` – forward funds to a router for automation\nEvents announce when a withdrawal is created or successfully claimed.",
+      "file": "contracts/interfaces/IWithdrawal.sol",
+      "highlight": [
+        {
+          "start": 7,
+          "end": 16
+        }
+      ],
+      "title": "",
+      "id": "32490"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "contracts/interfaces/IWithdrawalRouter.sol"
+      ],
+      "description": "Routers are external helper contracts that can automate swaps, bridging, or other post-withdrawal logic.  `IWithdrawalRouter` defines what the Withdrawal contract expects from them.",
+      "title": "",
+      "id": "32491"
+    },
+    {
+      "type": "highlight",
+      "description": "`Tokens` (5-8) describes each asset amount being withdrawn.\n`route` (line 10) is invoked by `claimRouted`, handing control to the router so it can perform its automation on behalf of the user.",
+      "file": "contracts/interfaces/IWithdrawalRouter.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 11
+        }
+      ],
+      "title": "",
+      "id": "32492"
+    },
+    {
+      "type": "textOnly",
+      "description": "You now know where the implementation lives, what data it stores, and the exact public surface exposed through the two interfaces.  Next time we will dive deep into the internal logic of `Withdrawal.sol`.",
+      "title": "",
+      "id": "32493"
+    }
+  ]
+}

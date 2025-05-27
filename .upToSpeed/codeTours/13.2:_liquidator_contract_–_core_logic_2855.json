@@ -1,0 +1,260 @@
+{
+  "title": "13.2: Liquidator Contract – Core Logic",
+  "id": "SHPnRtPA1Dsa0ELxfv+Zhwy01DS8HXWZthrR42QN8cg=",
+  "originalId": 2855,
+  "position": 73,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Every liquidation an executor submits moves through three stages: the child-contract is **Created**, it waits for **CoW Protocol** to settle the pre-signed order (**Waiting for settlement**), and finally the proceeds are **Finished** back into the `Cork protocol`.  We will read `Liquidator.sol` in that same order – first the state it keeps, then the helpers that prepare a child contract, and lastly the public entry-points that advance the life-cycle.",
+      "title": "",
+      "id": "34207"
+    },
+    {
+      "type": "highlight",
+      "description": "Lines 65-85 pin every external dependency at deployment time: `CoW`’s `Settlement` contract, the `CorkConfig` registry, the `CoW` hook trampoline, two template child-contracts used for cloning, and `ModuleCore`. Because these variables are immutable the addresses cannot be swapped out by an attacker or by governance.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 61,
+          "end": 87
+        }
+      ],
+      "title": "",
+      "id": "34208"
+    },
+    {
+      "type": "highlight",
+      "description": "Two modifiers gate all sensitive functions.  `onlyTrampoline` (95-100) reserves a narrow surface for CoW-hook callbacks, while `onlyLiquidator` (106-110) requires the caller to be on an allow-list managed in `CorkConfig`.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 94,
+          "end": 111
+        }
+      ],
+      "title": "",
+      "id": "34209"
+    },
+    {
+      "type": "highlight",
+      "description": "`CorkConfig` decides who is trusted: a user must hold a role that is the hash of `BASE_LIQUIDATOR_ROLE` concatenated with this liquidator’s address.  **Governance** can grant or revoke executors at any time without upgrading `Liquidator.sol`.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 136,
+          "end": 142
+        }
+      ],
+      "title": "",
+      "id": "34210"
+    },
+    {
+      "type": "highlight",
+      "description": "The contract keeps minimal mutable state. Details (40-44) is the trade tuple (`sell token/amount`, `buy token`). `Orders` (53-59) wraps `Details` with the child-liquidator address, an *optional* vaultId (empty means **Protected Unit**), and the receiver. Mapping `orderCalls[refId]` → `Orders` tracks every outstanding liquidation.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 34,
+          "end": 59
+        }
+      ],
+      "title": "",
+      "id": "34211"
+    },
+    {
+      "type": "highlight",
+      "description": "During deployment the constructor creates one `VaultChildLiquidator` and one `ProtectedUnitChildLiquidator` and stores their addresses (131-133).  All future liquidations are cheap `CREATE2` clones of these templates.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 121,
+          "end": 134
+        }
+      ],
+      "title": "",
+      "id": "34212"
+    },
+    {
+      "type": "highlight",
+      "description": "Anyone can predict where the clone will live: `fetchVaultReceiver` / `fetchProtectedUnitReceiver` call `Clones.predictDeterministicAddress` with `refId` as the salt.  Off-chain systems can derive the future receiver address before they move funds.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 142,
+          "end": 154
+        }
+      ],
+      "title": "",
+      "id": "34213"
+    },
+    {
+      "type": "highlight",
+      "description": "`_initializeVaultLiquidator` clones the vault template at that deterministic address and calls initialize on the new child (159-162).",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 156,
+          "end": 163
+        }
+      ],
+      "title": "",
+      "id": "34214"
+    },
+    {
+      "type": "highlight",
+      "description": "The `Protected-Unit` path is identical; only the final receiver differs.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 164,
+          "end": 172
+        }
+      ],
+      "title": "",
+      "id": "34215"
+    },
+    {
+      "type": "highlight",
+      "description": "`_moveVaultFunds` first asks `ModuleCore` to release the specified amount (175-176) and then transfers the tokens straight to the `child` (177-178).  The **parent contract** never holds user funds.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 174,
+          "end": 178
+        }
+      ],
+      "title": "",
+      "id": "34216"
+    },
+    {
+      "type": "highlight",
+      "description": "`_moveProtectedUnitFunds` performs the same pull-and-forward dance for a `Protected Unit`.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 180,
+          "end": 184
+        }
+      ],
+      "title": "",
+      "id": "34217"
+    },
+    {
+      "type": "highlight",
+      "description": "`createOrderVault` shows the **Created → Waiting** transition in full: build Details, clone, store Orders, pull funds, emit OrderSubmitted. No interaction with `CoW` happens here—that is handled by the child’s pre-signature.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 200,
+          "end": 219
+        }
+      ],
+      "title": "",
+      "id": "34218"
+    },
+    {
+      "type": "highlight",
+      "description": "`createOrderProtectedUnit` mirrors the vault flow but records an empty `vaultId` (246) and a different `receiver`.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 236,
+          "end": 259
+        }
+      ],
+      "title": "",
+      "id": "34219"
+    },
+    {
+      "type": "textOnly",
+      "description": "Once `CoW Protocol` has executed the order any **authorised executor** can move the proceeds back into the protocol and close the book.",
+      "title": "",
+      "id": "34220"
+    },
+    {
+      "type": "highlight",
+      "description": "`finishVaultOrder` tells the `vault` child to forward both bought tokens and leftover sell tokens, then deletes the mapping entry so the `refId` cannot be reused.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 269,
+          "end": 275
+        }
+      ],
+      "title": "",
+      "id": "34221"
+    },
+    {
+      "type": "highlight",
+      "description": "`finishProtectedUnitOrder` performs the same clean-up for Protected Units.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 284,
+          "end": 289
+        }
+      ],
+      "title": "",
+      "id": "34222"
+    },
+    {
+      "type": "highlight",
+      "description": "`finishProtectedUnitOrderAndExecuteTrade` adds an optional internal swap. The call to `ProtectedUnit.useFunds` is wrapped in try/catch so a failed trade cannot lock funds or block settlement—a key robustness feature.",
+      "file": "contracts/core/liquidators/cow-protocol/Liquidator.sol",
+      "highlight": [
+        {
+          "start": 302,
+          "end": 317
+        }
+      ],
+      "title": "",
+      "id": "34223"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside every child `_approveSettlement` pre-signs the order `UID` (92-93) and grants `Settlement` an allowance equal to `sellAmount` (94-95).  This is why the parent must move the exact amount of tokens\u0002013 any extra would be spendable by `CoW`.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 89,
+          "end": 96
+        }
+      ],
+      "title": "",
+      "id": "34224"
+    },
+    {
+      "type": "highlight",
+      "description": "`ProtectedUnitChildLiquidator.moveFunds` approves the receiver for both the bought token (117-119) and any leftover sell token (122-125) before calling `receiveFunds`. The child ends with zero balance.",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 114,
+          "end": 126
+        }
+      ],
+      "title": "",
+      "id": "34225"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultChildLiquidator.moveFunds` follows the same pattern but calls dedicated `ModuleCore` hooks that distinguish proceeds (149-150) from leftovers (155-156).",
+      "file": "contracts/core/liquidators/cow-protocol/ChildLiquidator.sol",
+      "highlight": [
+        {
+          "start": 145,
+          "end": 156
+        }
+      ],
+      "title": "",
+      "id": "34226"
+    },
+    {
+      "type": "textOnly",
+      "description": "Recap: an order is **Created** (`clone` + `pull funds`), then **Waiting** while CoW settles it, and finally **Finished** (`child forwards proceeds`, `mapping entry deleted`).  **Immutable dependencies** protect against upgrade attacks, **deterministic clone addresses** make race conditions hard, and **role-based access control** confines power to approved executors.",
+      "title": "",
+      "id": "34227"
+    }
+  ]
+}

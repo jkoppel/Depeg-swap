@@ -1,0 +1,163 @@
+{
+  "title": "10.2: ModuleCore.sol – entry & life-cycle hooks",
+  "id": "F5DMVIqnyctGldRYbipBNLHspG1lvb280FZDuRfOa5Y=",
+  "originalId": 2756,
+  "position": 47,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "`ModuleCore` is the single façade that stitches the `Peg-Stability-Module (PSM)` and the `Lending-Vault (LV)` together.  All state, permission checks, and future upgrades are routed through it, so the journey starts here.",
+      "title": "",
+      "id": "32967"
+    },
+    {
+      "type": "highlight",
+      "description": "The inheritance list joins `OpenZeppelin`'s upgrade/ownership mix-ins with the two functional sub-modules.\n- `UUPSUpgradeable` ⇒ code can be upgraded through the proxy.\n- `OwnableUpgradeable` ⇒ the owner is the only account allowed to authorise upgrades.\n- `PsmCore` & `VaultCore` ⇒ inject the whole PSM and LV APIs so external callers only ever interact with this wrapper.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 18,
+          "end": 26
+        }
+      ],
+      "title": "",
+      "id": "32971"
+    },
+    {
+      "type": "highlight",
+      "description": "`initialize` is the proxy entry-point.\n1. Zero-address guard protects against mis-configuration (40-44).\n2. `OpenZeppelin` initialisers set the owner and UUPS machinery (47-48).\n3. Control is delegated to `initializeModuleState`, keeping the constructor fully disabled for proxies.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 35,
+          "end": 50
+        }
+      ],
+      "title": "",
+      "id": "32970"
+    },
+    {
+      "type": "highlight",
+      "description": "`initializeModuleState` writes the four external addresses into storage after repeating the zero-address check (56-60).\nThese cached pointers are later read by every **PSM/Vault** operation, guaranteeing consistency.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 50,
+          "end": 67
+        }
+      ],
+      "title": "",
+      "id": "32975"
+    },
+    {
+      "type": "highlight",
+      "description": "`getId` gives front-ends a pure helper that turns a market definition into an `Id`.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 73,
+          "end": 79
+        }
+      ],
+      "title": "",
+      "id": "32977"
+    },
+    {
+      "type": "highlight",
+      "description": "Under the hood `PairLibrary.initalize` assembles the struct, while `toId` hashes it with `keccak256`. Equal inputs \u000212 equal market ids, no storage read required.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 37,
+          "end": 53
+        }
+      ],
+      "title": "",
+      "id": "32976"
+    },
+    {
+      "type": "highlight",
+      "description": "`initializeModuleCore` boots a brand-new market.\n1. Rejects zero-length expiry (100-104).\n2. Builds the `Pair` and its `Id` (105-107).\n3. Fetches the `State` slot, aborting if the pair already exists (108-112).\n4. Deploys the LV token via the factory (114-117).\n5. Delegates initialisation to `PSM` & `Vault` **libraries** (118-120).\n6. Emits `InitializedModuleCore` so off-chain services can index the new market.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 94,
+          "end": 122
+        }
+      ],
+      "title": "",
+      "id": "32981"
+    },
+    {
+      "type": "highlight",
+      "description": "`issueNewDs` handles every epoch roll-over.\n- Refreshes external exchange rate (139-140).\n- Mints the next CT/DS pair through the factory (141-152).\n- Kicks off helper bookkeeping (**next slide**) then configures router discounts and vault liquidation deadlines (154-162).",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 124,
+          "end": 163
+        }
+      ],
+      "title": "",
+      "id": "32980"
+    },
+    {
+      "type": "highlight",
+      "description": "`_initOnNewIssuance` updates accounting:\n- bumps `globalAssetIdx` (169-170),\n- records the issuance in `PSM` state (172-173),\n- lets the router register new reserves (174),\n- finally emits the `Issued` event carrying the AMM pool id (176).",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 165,
+          "end": 176
+        }
+      ],
+      "title": "",
+      "id": "32986"
+    },
+    {
+      "type": "highlight",
+      "description": "Configuration changes follow a strict pattern.\n`onlyConfig()` gates the call, the relevant library mutates the stored `State`, and an event logs the change.  Shown here: fee rate (179-185) and PSM deposit pause (190-197).",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 179,
+          "end": 197
+        }
+      ],
+      "title": "",
+      "id": "32984"
+    },
+    {
+      "type": "highlight",
+      "description": "The same symmetry applies to **Vault toggles**: **deposits** and **withdrawals** can be paused independently, mirroring the **PSM guards**. The **wrapper**’s role never changes—permission check, delegate, emit.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 228,
+          "end": 245
+        }
+      ],
+      "title": "",
+      "id": "32990"
+    },
+    {
+      "type": "highlight",
+      "description": "`expiry()` defers to `PsmLibrary.nextExpiry`, a final reminder that heavy logic lives in the libraries while `ModuleCore` remains a thin router.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 290,
+          "end": 292
+        }
+      ],
+      "title": "",
+      "id": "32987"
+    },
+    {
+      "type": "textOnly",
+      "description": "Whenever you read another function in `ModuleCore`, ask three questions: which library actually does the work, which slot of `State` is being mutated, and which guard (owner, config, not-paused) protects it.  With that lens, the entire module becomes predictable.",
+      "title": "",
+      "id": "32991"
+    }
+  ]
+}

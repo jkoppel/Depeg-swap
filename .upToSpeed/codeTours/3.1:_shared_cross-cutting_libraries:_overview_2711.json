@@ -1,0 +1,137 @@
+{
+  "title": "3.1: Shared Cross-cutting Libraries: Overview",
+  "id": "QTFv0ruP6RguGyV/FQdRs4oED2rNfHoSSuNJ1bVynkM=",
+  "originalId": 2711,
+  "position": 6,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "**These helper libraries** sit at the very bottom of the protocol. They standardise `state-checks`, `maths`, `signatures` and `token movements` so that every higher-level contract can focus on business logic.",
+      "title": "",
+      "id": "32216"
+    },
+    {
+      "type": "highlight",
+      "description": "`Guard.sol` opens with three descriptive errors – `Expired`, `NotExpired` and `Uninitialized` – signalling that this file is all about protecting functions against bad state.",
+      "file": "contracts/libraries/Guard.sol",
+      "highlight": [
+        {
+          "start": 16,
+          "end": 24
+        }
+      ],
+      "title": "",
+      "id": "32217"
+    },
+    {
+      "type": "highlight",
+      "description": "`safeBeforeExpired` and `safeAfterExpired` compose the individual checks into one-liners, letting callers write a single guard instead of three separate if-clauses.",
+      "file": "contracts/libraries/Guard.sol",
+      "highlight": [
+        {
+          "start": 43,
+          "end": 51
+        }
+      ],
+      "title": "",
+      "id": "32218"
+    },
+    {
+      "type": "highlight",
+      "description": "`LogExpMath` declares itself an 18-decimal fixed-point math library and defines the `ONE_18` / `ONE_20` scale factors that every calculation is based on.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 20,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "32219"
+    },
+    {
+      "type": "highlight",
+      "description": "Public entry-point `exp()` computes e^x using overflow protection and decomposition into pre-computed powers, providing constant-time performance.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 85,
+          "end": 97
+        }
+      ],
+      "title": "",
+      "id": "32220"
+    },
+    {
+      "type": "highlight",
+      "description": "The sibling `ln()` and `pow()` functions complete the toolkit so contracts can hop between logarithmic and exponential space without reinventing heavy maths.",
+      "file": "contracts/libraries/LogExpMath.sol",
+      "highlight": [
+        {
+          "start": 231,
+          "end": 259
+        }
+      ],
+      "title": "",
+      "id": "32221"
+    },
+    {
+      "type": "highlight",
+      "description": "`MathHelper` wraps dozens of finance-specific formulas. Even the first screen shows liquidity provisioning, swap quoting, percentage-fee helpers and tolerance calculations — a huge surface used by `vaults`, `routers` and `liquidators`.",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 20,
+          "end": 60
+        }
+      ],
+      "title": "",
+      "id": "32222"
+    },
+    {
+      "type": "highlight",
+      "description": "SignatureHelperLib contains a Signature struct with three fields (v,r,s) and provides a split() function that converts raw signature bytes into structured components while validating the input length.",
+      "file": "contracts/libraries/SignatureHelperLib.sol",
+      "highlight": [
+        {
+          "start": 6,
+          "end": 30
+        }
+      ],
+      "title": "",
+      "id": "32223"
+    },
+    {
+      "type": "highlight",
+      "description": "`TransferHelper` normalises every token amount to 18 decimals (`normalizeDecimals`) and then re-scales inside `transferNormalize` so business code can think **\"fixed-point\"** while `SafeERC20` moves the actual tokens.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 55
+        }
+      ],
+      "title": "",
+      "id": "32224"
+    },
+    {
+      "type": "highlight",
+      "description": "PermitChecker exposes a single `supportsPermit()` that quickly probes for `nonces()` and `DOMAIN_SEPARATOR()` to decide whether a token supports off-chain approvals.",
+      "file": "contracts/libraries/PermitChecker.sol",
+      "highlight": [
+        {
+          "start": 11,
+          "end": 17
+        }
+      ],
+      "title": "",
+      "id": "32225"
+    },
+    {
+      "type": "textOnly",
+      "description": "Keep these helpers in mind: almost every module or asset library defers to them for validation, maths, parsing and `ERC20` interactions – they’re the invisible glue of the protocol.",
+      "title": "",
+      "id": "32226"
+    }
+  ]
+}

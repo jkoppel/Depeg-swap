@@ -1,0 +1,66 @@
+{
+  "title": "12.9: ProtectedUnitRouter – Batch UX layer",
+  "id": "/IGfbeVM7t6ekJrwesWRyUBasItzQPQN+HR1voEA1T4=",
+  "originalId": 2850,
+  "position": 70,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "**Single-Protected-Unit** flows are already familiar; this tour shows how the router executes the same `mint` and `burn` logic for *many* units in one atomic, **permit-based** call while keeping users safe and refunding anything left over.",
+      "title": "",
+      "id": "34159"
+    },
+    {
+      "type": "highlight",
+      "description": "`batchMint` turns the preview into real work.\n\n- `80-85`: validates every array that will follow.\n- `92`: a single `Permit2.permitTransferFrom` pulls *all* `DS` & `PA` tokens the user authorised.\n- `99-135`: for each Protected Unit it figures out its `DS`/`PA` indices (`105-110`), approves them to the unit (`111-124`), mints (`127`) and immediately hands the `PU` tokens to the sender (`130`). Usage is accumulated through `_trackTokenUsage` (`133-135`).\n- `138-139`: once all mints finish, `_returnExcessTokens` refunds any `DS`/`PA` that were permitted but unused.",
+      "file": "contracts/core/assets/ProtectedUnitRouter.sol",
+      "highlight": [
+        {
+          "start": 75,
+          "end": 139
+        }
+      ],
+      "title": "",
+      "id": "34163"
+    },
+    {
+      "type": "highlight",
+      "description": "`previewBatchBurn` mirrors the earlier preview: after length validation (158-160) it loops (169-171) and asks each unit what the caller would get back.  Three result arrays are produced: `DS`, `PA`, and the extra `RA` token that appears on burns.",
+      "file": "contracts/core/assets/ProtectedUnitRouter.sol",
+      "highlight": [
+        {
+          "start": 153,
+          "end": 173
+        }
+      ],
+      "title": "",
+      "id": "34165"
+    },
+    {
+      "type": "highlight",
+      "description": "`batchBurn` with permit brings the same convenience and safety seen in `batchMint`.\n- 236-242: all array sizes must match.\n- 245: `Permit2.permitTransferFrom` moves every PU token the user signed for.\n- 252-254: usage of each PU token is tracked up front.\n- 257-258: the internal `_batchBurn` performs the actual burns and token payouts.\n- 261-262: finally, `_returnExcessTokens` refunds any over-authorised PU tokens.",
+      "file": "contracts/core/assets/ProtectedUnitRouter.sol",
+      "highlight": [
+        {
+          "start": 224,
+          "end": 262
+        }
+      ],
+      "title": "",
+      "id": "34164"
+    },
+    {
+      "type": "highlight",
+      "description": "`_returnExcessTokens` compares what was authorised (355-357) to what the router really consumed (359-366).  If a surplus exists (369-373) it is immediately sent back to the user.  This closes the loop and guarantees no token is left stranded in the router.",
+      "file": "contracts/core/assets/ProtectedUnitRouter.sol",
+      "highlight": [
+        {
+          "start": 347,
+          "end": 376
+        }
+      ],
+      "title": "",
+      "id": "34166"
+    }
+  ]
+}

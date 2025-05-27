@@ -1,0 +1,111 @@
+{
+  "title": "8.4: NAV Circuit Breaker Deep-Dive",
+  "id": "mOtmg9Qf7ARolFLufM3QlqAMArSaemchJw+vl8JeFfs=",
+  "originalId": 2743,
+  "position": 36,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This walkthrough examines how the Vault’s **NAV circuit-breaker** prevents deposits when live NAV drifts too far below recent highs. We’ll explore on-chain storage, sliding-window snapshot logic, deposit checks, withdrawal updates, and threshold tuning.",
+      "title": "",
+      "id": "32923"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultConfig` contains our breaker (line 131), and struct `NavCircuitBreaker` (lines 134–139) holds two NAV snapshots, their timestamps, and `navThreshold`, the maximum allowed drift (in 1e18 units).",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 131,
+          "end": 140
+        }
+      ],
+      "title": "",
+      "id": "32924"
+    },
+    {
+      "type": "highlight",
+      "description": "`_updateSnapshot` (lines 14–33) rotates a two-slot window: it picks the older index (line 15), checks if \u001e1 day has passed (lines 18/25), then overwrites that slot with `currentNav` and `timestamp`, emitting an event. Only one slot can update per day, yielding a sliding 1-day window.",
+      "file": "contracts/libraries/NavCircuitBreaker.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "32925"
+    },
+    {
+      "type": "highlight",
+      "description": "`validateAndUpdateDeposit` (lines 40–48) first calls `_updateSnapshot` (line 41), then picks the higher snapshot as `referenceNav` (line 42). It computes `delta = referenceNav × navThreshold%` (line 43) and reverts if `currentNav < delta` (lines 45–47), halting unsafe deposits.",
+      "file": "contracts/libraries/NavCircuitBreaker.sol",
+      "highlight": [
+        {
+          "start": 36,
+          "end": 48
+        }
+      ],
+      "title": "",
+      "id": "32926"
+    },
+    {
+      "type": "highlight",
+      "description": "`updateOnWithdrawal` (lines 50–52) simply calls `_updateSnapshot` (line 51) without any revert. Withdrawals never block; they only refresh the snapshot window.",
+      "file": "contracts/libraries/NavCircuitBreaker.sol",
+      "highlight": [
+        {
+          "start": 50,
+          "end": 52
+        }
+      ],
+      "title": "",
+      "id": "32927"
+    },
+    {
+      "type": "highlight",
+      "description": "After calculating the NAV and determining how many tokens to mint, the Vault performs a critical safety check through the circuit breaker. This validation step acts as a gatekeeper - if the NAV has drifted too far from previous values, the entire deposit will be rejected before any tokens are minted.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 418,
+          "end": 425
+        }
+      ],
+      "title": "",
+      "id": "32937"
+    },
+    {
+      "type": "highlight",
+      "description": "This function ensures the circuit breaker stays informed of NAV changes during withdrawals, maintaining an accurate reference window for detecting dangerous price drifts.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 584,
+          "end": 592
+        }
+      ],
+      "title": "",
+      "id": "32938"
+    },
+    {
+      "type": "highlight",
+      "description": "Governance can adjust the drift limit at runtime via `updateNavThreshold` (lines 797–799). `navThreshold` is in `1e18` precision (e.g., `95e18` = 95%).",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 797,
+          "end": 799
+        }
+      ],
+      "title": "",
+      "id": "32930"
+    },
+    {
+      "type": "textOnly",
+      "description": "Example scenario:\n– With `navThreshold=95e18` and `referenceNav=1.00`, deposits are allowed only if `currentNAV \u000263; 0.95`.\n– If heavy withdrawals push NAV to 0.90, `validateAndUpdateDeposit` reverts (0.90<0.95), halting new deposits.\n– Over the next day, only one slot updates per 24 h, so `referenceNav` drifts slowly, giving time for governance intervention.",
+      "title": "",
+      "id": "32939"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "title": "15.1: Example Tokens: Overview",
+  "id": "FZYIP03e5JKg27CJ+FEa+wfRMPxJhvlIlyq94tkUKKo=",
+  "originalId": 2871,
+  "position": 79,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Three example **ERC-20** contracts live side-by-side in `contracts/tokens`.  They model real-world assets:\n- `CETH` – a wrapped representation of Ether\n- `CUSD` – a USD-pegged token\n- `CST`  – a staking wrapper around `CETH`",
+      "title": "",
+      "id": "34469"
+    },
+    {
+      "type": "highlight",
+      "description": "CETH is the first of the trio. Its header shows the standard **SPDX** & **pragma** plus **OpenZeppelin imports**, and confirms its location under `contracts/tokens`.",
+      "file": "contracts/tokens/CETH.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 5
+        }
+      ],
+      "title": "",
+      "id": "34470"
+    },
+    {
+      "type": "highlight",
+      "description": "Lines 12-15 capture the token’s whole pattern: the contract inherits `ERC20` and `AccessControl`, then declares `MINTER_ROLE` and `BURNER_ROLE` constants that gate privileged actions.",
+      "file": "contracts/tokens/CETH.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "34471"
+    },
+    {
+      "type": "highlight",
+      "description": "Here we see the core functionality of CETH - notice how minimal the implementation is. The role-based access pattern controls who can create or destroy tokens, keeping the contract simple yet secure.",
+      "file": "contracts/tokens/CETH.sol",
+      "highlight": [
+        {
+          "start": 31,
+          "end": 34
+        }
+      ],
+      "title": "",
+      "id": "34472"
+    },
+    {
+      "type": "highlight",
+      "description": "`CUSD` repeats the exact same inheritance list and role constants\u00151proving it is just a `USD`-flavoured sibling of `CETH` with no extra mechanics.",
+      "file": "contracts/tokens/CUSD.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "34473"
+    },
+    {
+      "type": "highlight",
+      "description": "CST starts like an **ERC-20** but swaps `AccessControl` for `Ownable` and immediately adds extra state: a reference to the CETH token, an `admin`, a `withdrawalDelay` and a `yieldRate`.",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "34474"
+    },
+    {
+      "type": "highlight",
+      "description": "Custom `struct`s and `mapping`s appear right after—`Deposit`, `WithdrawalRequest`, user deposit history and a withdrawal queue—clear signs of staking logic far beyond simple mint/burn.",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 19,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "34475"
+    },
+    {
+      "type": "textOnly",
+      "description": "Keep in mind:\n- **CETH** and **CUSD** are minimal, role-based tokens.\n- **CST** is a richer staking wrapper that tracks deposits, withdrawal requests and yield.\nWhenever the repo references \"example tokens\", this split under `contracts/tokens` explains what each one does.",
+      "title": "",
+      "id": "34476"
+    }
+  ]
+}

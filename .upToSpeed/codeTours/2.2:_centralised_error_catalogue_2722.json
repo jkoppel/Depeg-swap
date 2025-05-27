@@ -1,0 +1,92 @@
+{
+  "title": "2.2: Centralised Error Catalogue",
+  "id": "LI+LOuGkk249LerZzJZqjqQ91D2RPUB3t8H2XFXQ5Nc=",
+  "originalId": 2722,
+  "position": 3,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "All `Cork` contracts inherit a single interface – `IErrors` – so every **custom revert reason** is declared once and reused everywhere.  Mastering this `file` lets you recognise failures anywhere in the codebase.",
+      "title": "",
+      "id": "32458"
+    },
+    {
+      "type": "highlight",
+      "description": "The opening section focuses on liquidity-management and pool-setup checks. Errors such as `NotEnoughLiquidity`, `InvalidToken` and `AlreadyInitialized` guard swaps, deposits and initialisation.",
+      "file": "contracts/interfaces/IErrors.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 23
+        }
+      ],
+      "title": "",
+      "id": "32459"
+    },
+    {
+      "type": "highlight",
+      "description": "Here the maths helper throws `NotEnoughLiquidity` when someone tries to withdraw more than the reserves can cover – a direct use of the interface definition you just saw.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 67,
+          "end": 73
+        }
+      ],
+      "title": "",
+      "id": "32460"
+    },
+    {
+      "type": "highlight",
+      "description": "Mid-file the theme shifts to governance and access control: `OnlyConfig` / `NotModuleCore` enforce who may call, while `MintCapExceeded` and `InvalidValue` protect supply parameters.",
+      "file": "contracts/interfaces/IErrors.sol",
+      "highlight": [
+        {
+          "start": 38,
+          "end": 57
+        }
+      ],
+      "title": "",
+      "id": "32461"
+    },
+    {
+      "type": "highlight",
+      "description": "The `ExchangeRateProvider`’s internal guard demonstrates these governance errors in practice – raising `OnlyConfigAllowed` for unauthorised callers and `ZeroAddress` for bad parameters.",
+      "file": "contracts/core/ExchangeRateProvider.sol",
+      "highlight": [
+        {
+          "start": 24,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "32476"
+    },
+    {
+      "type": "highlight",
+      "description": "Further down you meet the root-finding trio – `InvalidS`, `NoSignChange`, `NoConverge` – all dedicated to numerical procedures inside the `DS` swap math.",
+      "file": "contracts/interfaces/IErrors.sol",
+      "highlight": [
+        {
+          "start": 152,
+          "end": 160
+        }
+      ],
+      "title": "",
+      "id": "32477"
+    },
+    {
+      "type": "highlight",
+      "description": "When logarithms encounter an impossible input the `library` reverts with **InvalidS**, flagging that the solver started from a nonsensical point.",
+      "file": "contracts/libraries/DsSwapperMathLib.sol",
+      "highlight": [
+        {
+          "start": 41,
+          "end": 48
+        }
+      ],
+      "title": "",
+      "id": "32464"
+    }
+  ]
+}

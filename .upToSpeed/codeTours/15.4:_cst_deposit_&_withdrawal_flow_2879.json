@@ -1,0 +1,124 @@
+{
+  "title": "15.4: CST Deposit & Withdrawal Flow",
+  "id": "3xGq24dDYUScsaaDF54EbiuoS/a+P/UzGDamT/Q2VPY=",
+  "originalId": 2879,
+  "position": 82,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Follow the lifecycle of a user’s **CETH** as it enters **CST**, waits in the **withdrawal queue**, and finally returns to the user.  The tour also spotlights the owner controls that can redirect or rebalance the underlying **CETH**.",
+      "title": "",
+      "id": "34552"
+    },
+    {
+      "type": "highlight",
+      "description": "`deposit()` first rejects zero-value calls (line 73) and logs the deposit with a timestamp (line 78).  **Minting is proportional**: if this is the first deposit, **mint** exactly the amount sent (line 85); otherwise scale by the pool’s existing `CETH` balance so each holder keeps the same share (lines 81–88).  `CETH` is finally pulled from the user (line 92).",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 72,
+          "end": 93
+        }
+      ],
+      "title": "",
+      "id": "34553"
+    },
+    {
+      "type": "highlight",
+      "description": "`requestWithdrawal()` guards against zero amounts and insufficient CST (lines 100–104), then records `amount` + `timestamp` (line 108).  If the caller is not already queued, they are appended to `pendingUsers` and flagged in `isUserPending` (lines 110–114).  Nothing moves yet—funds stay in the pool until the delay expires.",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 99,
+          "end": 115
+        }
+      ],
+      "title": "",
+      "id": "34555"
+    },
+    {
+      "type": "highlight",
+      "description": "`processWithdrawals()` can be triggered by anyone.  For each queued user whose delay has elapsed (line 133) it computes the user’s slice of the contract’s `CETH` balance, scaling by `totalSupply` (line 136).  Their `CST` is burned (line 139) and the calculated `CETH` is sent (line 142).",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 120,
+          "end": 142
+        }
+      ],
+      "title": "",
+      "id": "34558"
+    },
+    {
+      "type": "highlight",
+      "description": "After a payout, the withdrawal request is deleted (**line 145**) and the user is removed from `pendingUsers` with a **swap-and-pop trick** (**lines 148–149**). The loop index is decremented (**line 157**) so the element swapped into slot `i` is processed next.",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 144,
+          "end": 158
+        }
+      ],
+      "title": "",
+      "id": "34559"
+    },
+    {
+      "type": "highlight",
+      "description": "`slash()` lets the contract owner transfer any amount of `CETH`—up to the pool’s current balance—to the admin address (lines 167–170).  It is a direct reduction of backing assets for all `CST` holders.",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 166,
+          "end": 171
+        }
+      ],
+      "title": "",
+      "id": "34563"
+    },
+    {
+      "type": "highlight",
+      "description": "`changeRate()` increases the `yieldRate` when `newRate` > `current`. It calculates the `extra CETH` needed for the higher rate (lines 180–185) and, if short, mints that amount into the contract (line 188) before updating `yieldRate` (line 191).",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 173,
+          "end": 191
+        }
+      ],
+      "title": "",
+      "id": "34565"
+    },
+    {
+      "type": "highlight",
+      "description": "If the owner lowers `yieldRate` instead, any excess `CETH` (`line 194`) is transferred to `admin` (`line 197`) and the new rate stored (`line 200`). Thus `changeRate` can either inject or slash `CETH` to keep the pool aligned with the declared yield.",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 192,
+          "end": 201
+        }
+      ],
+      "title": "",
+      "id": "34567"
+    },
+    {
+      "type": "highlight",
+      "description": "`setWithdrawDelay()` simply replaces the `withdrawalDelay` constant (line 213), changing how long requests must wait in the queue.",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 212,
+          "end": 214
+        }
+      ],
+      "title": "",
+      "id": "34566"
+    },
+    {
+      "type": "textOnly",
+      "description": "You now have the full picture: deposits mint proportional `CST`, requests queue withdrawals, `processWithdrawals` burns `CST` for the user’s share of `CETH`, and the owner can intervene with `slash`, `changeRate`, or `setWithdrawDelay` to reshape the pool’s economics.",
+      "title": "",
+      "id": "34569"
+    }
+  ]
+}

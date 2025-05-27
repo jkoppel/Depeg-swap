@@ -1,0 +1,137 @@
+{
+  "title": "8.1: Liquidity-Vault: Overview",
+  "id": "1MdyhbSFnNnCKxtEfJPdpdf2XZ8R1h4O2FtMa7aSqzA=",
+  "originalId": 2740,
+  "position": 33,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "A whistle-stop tour of the `Liquidity-Vault` component – nine `Solidity` files that shape deposits, withdrawals, accounting, and circuit-breaker safety.",
+      "title": "",
+      "id": "33669"
+    },
+    {
+      "type": "highlight",
+      "description": "VaultCore is the public façade: every user-facing call (`depositLv`, `redeemEarlyLv`, …) enters here before being forwarded to the heavy-duty `library` logic.",
+      "file": "contracts/core/Vault.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 19
+        }
+      ],
+      "title": "",
+      "id": "33671"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultLibrary` is the brain.  It holds the algorithms for deposits, liquidity-adding, NAV calculation, and more – and coordinates all helper libraries.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 35
+        }
+      ],
+      "title": "",
+      "id": "33673"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultBalancesLib` keeps `LP-token` bookkeeping concise – add, subtract, read – so accounting stays isolated and auditable.",
+      "file": "contracts/libraries/VaultBalancesLib.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 14
+        }
+      ],
+      "title": "",
+      "id": "33674"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultPoolLib` manages the vault’s internal pools, deciding how much `RA/CT` moves into `AMM` liquidity and maintaining withdrawal-pool exchange rates.",
+      "file": "contracts/libraries/VaultPoolLib.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "33680"
+    },
+    {
+      "type": "highlight",
+      "description": "`NavCircuitBreakerLibrary` guards users: it snapshots `NAV` twice a day and blocks deposits when `NAV` drifts beneath a configurable percentage of the reference value.",
+      "file": "contracts/libraries/NavCircuitBreaker.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "33682"
+    },
+    {
+      "type": "highlight",
+      "description": "`LvAssetLib` is a thin helper around the `LV` share token – `initialise`, `mint`, `totalIssued()`, and simple `lock`/`unlock` helpers live here.",
+      "file": "contracts/libraries/LvAssetLib.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 26
+        }
+      ],
+      "title": "",
+      "id": "33679"
+    },
+    {
+      "type": "highlight",
+      "description": "`LpParser` decodes a Cork AMM LP-token symbol back into its underlying **RA** and **CT** token addresses – handy when inspecting LP tokens on-chain.",
+      "file": "contracts/libraries/LpSymbolParser.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 10
+        }
+      ],
+      "title": "",
+      "id": "33681"
+    },
+    {
+      "type": "highlight",
+      "description": "`IVault` defines the user API (`events`, `structs`, `depositLv`, `redeemEarlyLv`, …).  `VaultCore` implements this interface.",
+      "file": "contracts/interfaces/IVault.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 17
+        }
+      ],
+      "title": "",
+      "id": "33683"
+    },
+    {
+      "type": "highlight",
+      "description": "`IVaultLiquidation` exposes a narrow channel for whitelisted liquidation contracts to request funds and return the proceeds.",
+      "file": "contracts/interfaces/IVaultLiquidation.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 12
+        }
+      ],
+      "title": "",
+      "id": "33685"
+    },
+    {
+      "type": "textOnly",
+      "description": "How they fit together:\n- `Vault.sol` → delegates every operation to `VaultLib`.\n- `VaultLib` → orchestrates helper libraries:\n  - `VaultBalancesLib` – LP balance bookkeeping\n  - `VaultPoolLib` – pool re-balancing maths\n  - `NavCircuitBreaker` – NAV safety checks\n  - `LvAssetLib` – share-token helpers\n  - `LpSymbolParser` – LP-token decoding\n- The core+library pair implements the **IVault** and **IVaultLiquidation** interfaces – the only surfaces exposed to the wider protocol.",
+      "title": "",
+      "id": "33689"
+    }
+  ]
+}

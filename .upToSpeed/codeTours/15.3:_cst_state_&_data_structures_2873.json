@@ -1,0 +1,72 @@
+{
+  "title": "15.3: CST State & Data Structures",
+  "id": "lyzLV0QYYpO/L6H3tC/Iqor6EHwdY7QXn2YkGre+owE=",
+  "originalId": 2873,
+  "position": 81,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "CST extends a plain `ERC-20` with just enough extra state to track who deposited `CETH`, who asked to get it back, and when that can happen. We will look at those storage variables one block at a time.",
+      "title": "",
+      "id": "34435"
+    },
+    {
+      "type": "highlight",
+      "description": "Lines 13-18 define four key contract parameters:\n- `ceth` – underlying token backing CST\n- `admin` – receiver of slashed/excess CETH\n- `withdrawalDelay` – minimum wait time for requests\n- `yieldRate` – CST/CETH exchange rate (scaled 1e18)",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 13,
+          "end": 18
+        }
+      ],
+      "title": "",
+      "id": "34436"
+    },
+    {
+      "type": "highlight",
+      "description": "Deposits and withdrawals are recorded with small structs.\n`Deposit` keeps `(amount, timestamp)` so the contract can later reason about how long the stake has been held.\n`WithdrawalRequest` stores `(amount, requestTime)` – `processWithdrawals` compares `requestTime + withdrawalDelay` to `block.timestamp` before allowing the exit.",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 19,
+          "end": 27
+        }
+      ],
+      "title": "",
+      "id": "34437"
+    },
+    {
+      "type": "highlight",
+      "description": "Four collections work together to manage withdrawal requests:\n- `userDeposits` → tracks deposit history per user\n- `requestedWithdrawals` → stores active withdrawal requests\n- `pendingUsers` → list of users waiting for processing\n- `isUserPending` → prevents duplicate pending requests\nThe array enables iteration while the mapping provides direct access to requests.",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 29,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "34438"
+    },
+    {
+      "type": "highlight",
+      "description": "Custom errors act as on-chain documentation of critical invariants: non-zero addresses and amounts, sufficient balances, non-empty supply, positive rates. Compared with `require(\"msg\")` they are cheaper and self-explanatory in the ABI.",
+      "file": "contracts/tokens/CST.sol",
+      "highlight": [
+        {
+          "start": 34,
+          "end": 50
+        }
+      ],
+      "title": "",
+      "id": "34439"
+    },
+    {
+      "type": "textOnly",
+      "description": "You can now picture `CST`'s storage:\n- a few global knobs (`ceth`, `admin`, `delay`, `rate`)\n- per-deposit history for each staker\n- a single withdrawal slot plus a queue index per user\n- explicit error types capturing the assumptions each function relies on.\nWith that mental model the behaviour of `deposit`, `request` and `process` functions becomes much easier to follow.",
+      "title": "",
+      "id": "34440"
+    }
+  ]
+}

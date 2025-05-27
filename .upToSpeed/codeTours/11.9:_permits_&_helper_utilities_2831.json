@@ -1,0 +1,150 @@
+{
+  "title": "11.9: Permits & Helper Utilities",
+  "id": "CucR2KBmUFVklQeOl2/TTJfG26/+el0icSCRplpEYuQ=",
+  "originalId": 2831,
+  "position": 60,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "The router's friendly one-call swaps rely on three small helpers:\n\n- signature wrappers so users never call `approve()`\n\n- decimal converters so any `6/8/18-dec` token feels the same\n\n- a tiny safeguard that stops `reserve sell loops`.",
+      "title": "",
+      "id": "33855"
+    },
+    {
+      "type": "highlight",
+      "description": "`permitForRA` unwraps an **EIP-712** signature then pipes it straight to any **ERC-20**’s permit. Nothing router-specific here – it works with external `Redemption Assets` that may use unusual decimals.",
+      "file": "contracts/libraries/DepegSwapLib.sol",
+      "highlight": [
+        {
+          "start": 47,
+          "end": 60
+        }
+      ],
+      "title": "",
+      "id": "33856"
+    },
+    {
+      "type": "highlight",
+      "description": "`permit` does the same for DS/CT but through `Asset.permit` which carries an extra `functionName` (line 75). One signature can be re-used by different router entrypoints without replay risk.",
+      "file": "contracts/libraries/DepegSwapLib.sol",
+      "highlight": [
+        {
+          "start": 62,
+          "end": 76
+        }
+      ],
+      "title": "",
+      "id": "33857"
+    },
+    {
+      "type": "highlight",
+      "description": "`swapRaforDs` shows the wrapper in action: \n- line 467 checks the **RA** really supports permit.\n- line 471 executes `permitForRA` before touching balances, letting users approve-and-swap in a single transaction.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 451,
+          "end": 472
+        }
+      ],
+      "title": "",
+      "id": "33858"
+    },
+    {
+      "type": "highlight",
+      "description": "`swapDsforRa` mirrors the pattern for `DS`. The packed signature is split and forwarded in `line 551`; users again avoid a separate approve call.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 537,
+          "end": 553
+        }
+      ],
+      "title": "",
+      "id": "33859"
+    },
+    {
+      "type": "highlight",
+      "description": "`TransferHelper` fixes every token to 18-decimals internally.  **TARGET_DECIMALS** is hard-wired to 18 and `normalizeDecimals()` scales any amount up or down accordingly.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 10,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "33860"
+    },
+    {
+      "type": "highlight",
+      "description": "`tokenNativeDecimalsToFixed` / `fixedToTokenNativeDecimals` wrap the scaling for both directions, bridging a token’s own decimals and the router’s 18-dec fixed-point math.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 30,
+          "end": 42
+        }
+      ],
+      "title": "",
+      "id": "33861"
+    },
+    {
+      "type": "highlight",
+      "description": "`transferNormalize` & `transferFromNormalize` combine scaling with `SafeERC20` transfers. Call-sites just provide 18-dec numbers and receive correctly rounded native-dec amounts.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 48,
+          "end": 60
+        }
+      ],
+      "title": "",
+      "id": "33862"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside the router those helpers are everywhere: incoming RA is converted to `fixed-18` (line 293) for math, then the results are flipped back to the asset’s own decimals (lines 303-305).  Different RA decimals become a non-issue.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 293,
+          "end": 305
+        }
+      ],
+      "title": "",
+      "id": "33863"
+    },
+    {
+      "type": "highlight",
+      "description": "A last **quality-of-life detail**: `RESERVE_MINIMUM_SELL_AMOUNT` = 0.001 DS. Tiny reserves below this threshold are ignored so edge-case sells cannot brick the buy path.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 51,
+          "end": 54
+        }
+      ],
+      "title": "",
+      "id": "33864"
+    },
+    {
+      "type": "highlight",
+      "description": "Whenever the router considers selling reserve DS it first checks the constant (line 394).  Sub-threshold amounts are skipped, guaranteeing trades stay liquid.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 390,
+          "end": 396
+        }
+      ],
+      "title": "",
+      "id": "33865"
+    },
+    {
+      "type": "textOnly",
+      "description": "Together, the `permit wrappers`, `fixed-point conversions` and `safety threshold` weave through every swap so users `approve`, `swap` and `settle` smoothly—no decimal headaches, no dangling approvals.",
+      "title": "",
+      "id": "33866"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "title": "12.5: ProtectedUnit.sol – Burn & withdraw flow",
+  "id": "mqotQ7YfKybTMASjqX2fBCyUEp76vkuQEtP9VqH46wg=",
+  "originalId": 2845,
+  "position": 66,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Minting created `PU` by pushing assets in proportion to existing reserves. The burn path is the mirror image: surrender `PU` → pull the same share of `DS` + `PA` + `RA` back out. We will follow the execution chain that turns a user’s burn request into three transfers.",
+      "title": "",
+      "id": "34060"
+    },
+    {
+      "type": "highlight",
+      "description": "`previewBurn()` is the read-only entry point every burn relies on.\n\n- Lines 510-515 fetch reserves, normalising `PA` & `RA` into 18-decimals so math is coherent.\n- Line 518 delegates the real calculation to `ProtectedUnitMath.withdraw` – this is the only math touched by burn.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 504,
+          "end": 519
+        }
+      ],
+      "title": "",
+      "id": "34061"
+    },
+    {
+      "type": "highlight",
+      "description": "`withdraw()` multiplies the `liquidity` being removed by each `reserve` and divides by `totalSupply`. Because the same formula is applied to `PA`, `DS` and `RA`, the user receives exactly their proportional share – no more, no less.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 60,
+          "end": 81
+        }
+      ],
+      "title": "",
+      "id": "34064"
+    },
+    {
+      "type": "highlight",
+      "description": "`burn(uint256)` is the self-service variant. Look at the modifiers: `whenNotPaused` prevents burns while the contract is paused; `nonReentrant` plus the transient guard protect state; `autoUpdateDS` & `autoSync` ensure reserves are up-to-the-second. The body is a single call to `_burnPU()`.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 548,
+          "end": 550
+        }
+      ],
+      "title": "",
+      "id": "34065"
+    },
+    {
+      "type": "highlight",
+      "description": "`burnFrom(address,uint256)` offers the same functionality for third parties who hold **allowance**. It shares the same guards and ultimately delegates to `_burnPU()` too.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 530,
+          "end": 538
+        }
+      ],
+      "title": "",
+      "id": "34069"
+    },
+    {
+      "type": "highlight",
+      "description": "`_burnPU()` is the workhorse: 1️⃣ Line 560 re-queries previewBurn, locking in DS, PA, RA outputs. 2️⃣ Line 562 destroys the PU via `_burnFrom` (next slide). 3️⃣ Lines 564-566 pay the user:\n- `TransferHelper.transferNormalize` handles PA decimals,\n- `_transferDs` ships raw DS,\n- `transferNormalize` does the same for RA.\nReserves are synchronised afterwards by the modifier.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 556,
+          "end": 567
+        }
+      ],
+      "title": "",
+      "id": "34070"
+    },
+    {
+      "type": "highlight",
+      "description": "`transferNormalize()` converts the fixed-point amount into the token’s native decimals before `SafeERC20.transfer` – this keeps external arithmetic in `18-decimals` while ensuring on-chain transfers use the token’s own units.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 48,
+          "end": 52
+        }
+      ],
+      "title": "",
+      "id": "34074"
+    },
+    {
+      "type": "highlight",
+      "description": "`_burnFrom()` first burns allowance if the caller is acting for someone else, then calls the inherited `ERC20` `_burn`. This is why `burnFrom()` requires prior approval while `burn()` does not.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 572,
+          "end": 578
+        }
+      ],
+      "title": "",
+      "id": "34073"
+    },
+    {
+      "type": "textOnly",
+      "description": "Putting it all together, for any burn amount `x` you can predict the outputs:\n**DS**   = `x` * `dsReserve` / `totalSupply`\n**PA***  = `x` * `paReserve` / `totalSupply`  → then scaled by `TransferHelper`\n**RA***  = `x` * `raReserve` / `totalSupply`  → then scaled likewise\nThe contract enforces these exact ratios, executes the transfers atomically, and updates its internal reserves so the invariant remains intact.",
+      "title": "",
+      "id": "34076"
+    }
+  ]
+}

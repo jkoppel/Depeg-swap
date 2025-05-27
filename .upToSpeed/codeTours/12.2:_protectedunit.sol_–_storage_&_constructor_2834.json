@@ -1,0 +1,98 @@
+{
+  "title": "12.2: ProtectedUnit.sol – Storage & Constructor",
+  "id": "XfwJjAiIWsXBGCoXf8SB+6vd/bQi+72HSSpxEa+FbKE=",
+  "originalId": 2834,
+  "position": 63,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This tour focuses on how state is arranged inside `ProtectedUnit` and how the `constructor` locks every dependency before any logic runs.",
+      "title": "",
+      "id": "33847"
+    },
+    {
+      "type": "highlight",
+      "description": "The contract tracks every DS token it ever works with using the `DSData` struct.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 24,
+          "end": 33
+        }
+      ],
+      "title": "",
+      "id": "33848"
+    },
+    {
+      "type": "highlight",
+      "description": "Lines 54-88 lay out the whole storage map:\n- 54-60 **immutable external contracts** (`CONFIG`, `FLASHSWAP_ROUTER`, `MODULE_CORE`, `PERMIT2`).\n- 61-69 **immutable asset references** (`PA`, `RA`).\n- 70-84 **live numbers** – three token reserves, the market id, and the mintCap limit.\n- 86-91 **lifetime bookkeeping** for DS rotations (`dsHistory` array and its index map).",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 54,
+          "end": 88
+        }
+      ],
+      "title": "",
+      "id": "33849"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside the constructor each immutable slot is written once: `MODULE_CORE`, `id`, `PA`, `RA`, `mintCap` and the remaining `router/config` handles.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 105,
+          "end": 128
+        }
+      ],
+      "title": "",
+      "id": "33850"
+    },
+    {
+      "type": "highlight",
+      "description": "`autoUpdateDS` silently refreshes the ds pointer before executing the function body.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 134,
+          "end": 137
+        }
+      ],
+      "title": "",
+      "id": "33851"
+    },
+    {
+      "type": "highlight",
+      "description": "`onlyLiquidationContract` checks `CONFIG` to make sure the caller is a whitelisted liquidator.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 141,
+          "end": 148
+        }
+      ],
+      "title": "",
+      "id": "33852"
+    },
+    {
+      "type": "highlight",
+      "description": "`onlyOwnerOrLiquidator` lets the owner or any whitelisted liquidator proceed, turning everyone else away.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 166,
+          "end": 171
+        }
+      ],
+      "title": "",
+      "id": "33853"
+    },
+    {
+      "type": "textOnly",
+      "description": "With these points you can now sketch `ProtectedUnit`’s storage layout and recall how the constructor wires each immutable dependency and how the three modifiers guard state-changing paths.",
+      "title": "",
+      "id": "33854"
+    }
+  ]
+}

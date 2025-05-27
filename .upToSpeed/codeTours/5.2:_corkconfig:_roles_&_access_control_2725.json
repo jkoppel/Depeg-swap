@@ -1,0 +1,111 @@
+{
+  "title": "5.2: CorkConfig: Roles & Access Control",
+  "id": "48OU64RIzcXBdgz4/y/YEmoVqAdM7SaGsl/Ng4RG7Og=",
+  "originalId": 2725,
+  "position": 17,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "`CorkConfig` is the single gatekeeper for every mutable setting in the protocol. The role-based modifiers define and control who can change what in the system.",
+      "title": "",
+      "id": "32433"
+    },
+    {
+      "type": "highlight",
+      "description": "Three top-level roles underpin the whole permission system.  `Managers` run day-to-day operations, `updaters` get a narrow mandate to refresh prices, and the base `liquidator` role is used only as the parent (admin) of per-liquidator whitelists.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 22,
+          "end": 25
+        }
+      ],
+      "title": "",
+      "id": "32436"
+    },
+    {
+      "type": "highlight",
+      "description": "`onlyManager` and `onlyUpdaterOrManager` are sprinkled over almost every state-changing function. The first limits access to managers, the second widens the gate to price-updaters as well.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 74,
+          "end": 86
+        }
+      ],
+      "title": "",
+      "id": "32438"
+    },
+    {
+      "type": "highlight",
+      "description": "The constructor wires the initial hierarchy: it deploys a fresh `ExchangeRateProvider`, makes `DEFAULT_ADMIN` the admin of `MANAGER_ROLE`, and makes managers the admins of both `RATE_UPDATERS_ROLE` and any liquidator-specific roles.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 88,
+          "end": 100
+        }
+      ],
+      "title": "",
+      "id": "32443"
+    },
+    {
+      "type": "highlight",
+      "description": "`_computeLiquidatorRoleHash` derives a unique role id from the liquidator contract address, giving each liquidator its own private whitelist.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 118,
+          "end": 120
+        }
+      ],
+      "title": "",
+      "id": "32444"
+    },
+    {
+      "type": "highlight",
+      "description": "OpenZeppelin’s `grantRole` is overridden so that **only a manager** can grant *any* role, tightening security compared with the default **\"role-admin** may grant\" model.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 127,
+          "end": 130
+        }
+      ],
+      "title": "",
+      "id": "32447"
+    },
+    {
+      "type": "highlight",
+      "description": "`transferAdmin` performs a clean, atomic hand-over of `DEFAULT_ADMIN`: the old admin revokes itself and the new one gains the role in the same transaction.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 131,
+          "end": 134
+        }
+      ],
+      "title": "",
+      "id": "32448"
+    },
+    {
+      "type": "highlight",
+      "description": "Managers populate or prune each liquidator’s whitelist through these helpers that wrap `_grantRole` and `_revokeRole` with the per-liquidator role hash.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 140,
+          "end": 146
+        }
+      ],
+      "title": "",
+      "id": "32455"
+    },
+    {
+      "type": "textOnly",
+      "description": "Who can change what?\n- `DEFAULT_ADMIN`: only replace itself.\n- `MANAGER_ROLE`: tweak every parameter, pause modules, and manage **all** other roles.\n- `RATE_UPDATERS_ROLE`: update exchange rates (and any function guarded by `onlyUpdaterOrManager`).\n- Per-liquidator roles: granular whitelist; managers decide who gets to execute liquidations.\nThis tight, two-tier hierarchy plus granular liquidation roles keeps the attack surface small and transparent.",
+      "title": "",
+      "id": "32451"
+    }
+  ]
+}

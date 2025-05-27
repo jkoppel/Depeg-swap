@@ -1,0 +1,66 @@
+{
+  "title": "7.7: PsmLib Redemption & Cancellation Flows",
+  "id": "lJEw/Xu5FRjAaxt7gA792pJNbkzvFy1lxcYoNg402kE=",
+  "originalId": 2742,
+  "position": 31,
+  "steps": [
+    {
+      "type": "highlight",
+      "description": "`previewRedeemWithDs()` gives the user a quote.\n\n- Guard that the chosen `DS` has not yet expired (**line 690**).\n- Fetch the latest `RA` ↔ (`CT`+`DS`) exchange-rate (**line 692**).\n- Convert the `PA` amount into 18-decimals (**line 694**) then multiply by the exchange-rate (**line 695**) to obtain an equal-value amount expressed in `RA`/`DS`.\n- That number is returned both as `ds` (**line 697**) and as gross `ra` (**line 698**).\n- A base redemption fee is computed (**line 700**) and deducted (**line 701**), leaving the net `RA` the user will get.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 684,
+          "end": 702
+        }
+      ],
+      "title": "",
+      "id": "32727"
+    },
+    {
+      "type": "highlight",
+      "description": "`redeemWithDs()` realises the quote.\n\n1. Verifies non-zero amount, DS not expired and refreshes the exchange-rate (lines 661-664).\n2. Calls the preview to learn received, dsProvided and fee (line 666).\n3. Ensures the contract still holds enough locked RA (lines 668-670).\n4. Processes an optional **ERC-2612** permit to spend the caller’s DS (line 672-675).\n5. `_redeemDs()` records the incoming DS & PA amounts (line 678).\n6. `_afterRedeemWithDs()` finalises transfers and splits the fee (line 679).",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 648,
+          "end": 680
+        }
+      ],
+      "title": "",
+      "id": "32729"
+    },
+    {
+      "type": "highlight",
+      "description": "`_redeemDs()` is pure accounting: it simply increments the `PSM`’s stored `DS` and `PA` balances so later liquidity operations can see the new funds.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 590,
+          "end": 593
+        }
+      ],
+      "title": "",
+      "id": "32731"
+    },
+    {
+      "type": "highlight",
+      "description": "`_splitFee()` returns two numbers: `splitted` (Treasury share) and `remaining` (Vault share). The percentage comes from `storage` and the math is handled by `MathHelper`.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 581,
+          "end": 588
+        }
+      ],
+      "title": "",
+      "id": "32733"
+    },
+    {
+      "type": "textOnly",
+      "description": "Key take-aways:\n\n- `previewRedeemWithDs` converts PA → equal RA/DS using the current exchange-rate and subtracts a configurable fee.\n- `redeemWithDs` validates liquidity, handles optional permits, books incoming tokens, then unlocks RA and routes the fee—Treasury share via `unlockToUnchecked`, remainder to Vault liquidity.\n- Cancelling CT + DS before expiry (`returnRaWithCtDs`) burns both tokens and releases the exact RA that was originally locked, fee-free.",
+      "title": "",
+      "id": "32736"
+    }
+  ]
+}

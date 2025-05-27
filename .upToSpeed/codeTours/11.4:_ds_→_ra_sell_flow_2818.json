@@ -1,0 +1,150 @@
+{
+  "title": "11.4: DS → RA Sell Flow",
+  "id": "fsLeApPcycHMQ/fY4g9Og1JLyOtavttFrfr3FOrmY6U=",
+  "originalId": 2818,
+  "position": 55,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "A single **DS→RA** sell will move through five code sites.  We will walk them in order so you can replay the trade mentally, token-by-token.",
+      "title": "",
+      "id": "33729"
+    },
+    {
+      "type": "highlight",
+      "description": "**Public entry with permit**\n- The permit (`551-553`) authorises the router to spend the caller's DS in-tx.\n- Control immediately drops to `_swapDsforRaTopLevel`; the rest of the logic is off-loaded there.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 538,
+          "end": 556
+        }
+      ],
+      "title": "",
+      "id": "33730"
+    },
+    {
+      "type": "highlight",
+      "description": "`_swapDsforRaTopLevel` – first state mutations\n1. **line 565** pulls the DS from the user into the router.\n2. **line 567** delegates pricing + flash-swap to `__swapDsforRa`.\n3. Reverts if the hook signals insufficient liquidity (**569-570**).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 558,
+          "end": 571
+        }
+      ],
+      "title": "",
+      "id": "33731"
+    },
+    {
+      "type": "highlight",
+      "description": "Exiting `_swapDsforRaTopLevel`\n- `amountOut` (573) is fetched from the `sell return-slot` the callback will fill later.\n- `HIYA` is updated with fixed-point `RA` & raw `DS` (575-576) before `DsSwapped` is emitted.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 573,
+          "end": 578
+        }
+      ],
+      "title": "",
+      "id": "33732"
+    },
+    {
+      "type": "highlight",
+      "description": "**`swapDsforRa` – quoting the trade**\n- `getAmountOutSellDS` (`604`) returns three things: expected RA, CT needed to repay the pool, and a success flag.\n- Any pricing failure bubbles out via the `try/catch` (`604-608`).",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 596,
+          "end": 607
+        }
+      ],
+      "title": "",
+      "id": "33733"
+    },
+    {
+      "type": "highlight",
+      "description": "Still in `__swapDsforRa`\n- Slippage guard (615-617).\n- `__flashSwap` is launched with `raAmount = 0`, `ctAmount = user-DS`, `buyDs = false` – signalling a **sell** flash-swap.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 615,
+          "end": 620
+        }
+      ],
+      "title": "",
+      "id": "33734"
+    },
+    {
+      "type": "highlight",
+      "description": "**Library context**\n`getAmountOutSellDS` (213-218) converts repayment maths into 18-decimals, computes RA out & CT debt, then scales back to native token units.",
+      "file": "contracts/libraries/DsFlashSwap.sol",
+      "highlight": [
+        {
+          "start": 208,
+          "end": 218
+        }
+      ],
+      "title": "",
+      "id": "33735"
+    },
+    {
+      "type": "highlight",
+      "description": "`flashSwap` – packaging the callback\n- `borrowed` (633-635) equals the `CT` amount we asked the pool to lend.\n- `CallbackData` flags `buyDs` = false and is **ABI-encoded** (634-637).\n- `hook.swap` (638) borrows `CT`, forwards it to the `router`, and expects `RA` repayment in the subsequent callback.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 622,
+          "end": 638
+        }
+      ],
+      "title": "",
+      "id": "33736"
+    },
+    {
+      "type": "highlight",
+      "description": "**CorkCall** – router is called back\nLines 648-657 guard the caller.\nThe **else-branch** (672-684) recognises a sell path and hands execution to `__afterFlashswapSell`, passing the borrowed CT and repayment figure supplied by the hook.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 648,
+          "end": 685
+        }
+      ],
+      "title": "",
+      "id": "33737"
+    },
+    {
+      "type": "highlight",
+      "description": "**afterFlashswapSell – repayment logic (1)**\n- Allowances for `DS` & `CT` are raised toward `_moduleCore` (748-750).\n- `PSM.returnRaWithCtDs` (753) takes both tokens, internally routes profit to `PSM`/`Vault`, and returns `RA`.\n- A safety-check (757-759) ensures the flash-loan can be repaid.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 738,
+          "end": 760
+        }
+      ],
+      "title": "",
+      "id": "33738"
+    },
+    {
+      "type": "highlight",
+      "description": "`__afterFlashswapSell` – repayment logic (2)\n- The surplus RA (761-764) is sent to the user.\n- `actualRepaymentAmount` (passed from the hook) is forwarded to the pool manager (766).\n- `RETURN_SLOT_SELL` (768) records the user's net RA so `_swapDsforRaTopLevel` can read it.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 761,
+          "end": 769
+        }
+      ],
+      "title": "",
+      "id": "33739"
+    },
+    {
+      "type": "textOnly",
+      "description": "**End-to-end picture**\n1. User calls `swapDsforRa` → router now holds `DS`.\n2. `swapDsforRa` quotes `RA` out & `CT` debt, then borrows that `CT` through a flash-swap.\n3. During the callback, the router deposits `DS` + borrowed `CT` into the `PSM`.  The `PSM` issues `RA`, routes profit internally, and hands `RA` back.\n4. Router repays the pool with part of that `RA`; the remainder goes to the user and is stored in `RETURN_SLOT_SELL`.\n5. `HIYA` has already been updated and `DsSwapped` emitted.\nYou can now replay every token transfer and storage write for a `DS→RA` sell.",
+      "title": "",
+      "id": "33740"
+    }
+  ]
+}

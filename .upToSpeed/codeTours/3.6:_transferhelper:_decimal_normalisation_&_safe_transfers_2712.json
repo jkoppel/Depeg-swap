@@ -1,0 +1,137 @@
+{
+  "title": "3.6: TransferHelper: Decimal Normalisation & Safe Transfers",
+  "id": "V1hGjExG8eTL2hro9cyU/GxnLsHQCH8RCsny5kGGqMs=",
+  "originalId": 2712,
+  "position": 11,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "**ERC-20s** disagree on decimal places (6, 8, 18 …). The protocol side-steps that by expressing every internal amount in `18-dec fixed-point` and batching the scale-conversion together with each transfer or burn. Let’s walk through the helper that makes this possible and then see it in use.",
+      "title": "",
+      "id": "32513"
+    },
+    {
+      "type": "highlight",
+      "description": "The heart of the strategy is one line: every number that leaves this `library` will be treated as if the token had 18 decimals.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 9,
+          "end": 11
+        }
+      ],
+      "title": "",
+      "id": "32515"
+    },
+    {
+      "type": "highlight",
+      "description": "`normalizeDecimals()` is the work-horse.  A right-shift (division) shrinks an amount when the source token was **more** granular; a left-shift (multiplication) enlarges it when the source had **fewer** decimals.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 25
+        }
+      ],
+      "title": "",
+      "id": "32517"
+    },
+    {
+      "type": "highlight",
+      "description": "`tokenNativeDecimalsToFixed()` (two overloads) lifts a raw on-chain amount into the 18-dec fixed-point world by consulting the token’s own metadata.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 30,
+          "end": 37
+        }
+      ],
+      "title": "",
+      "id": "32518"
+    },
+    {
+      "type": "highlight",
+      "description": "`fixedToTokenNativeDecimals()` mirrors the previous helper – it squeezes a fixed-point value back down to the token’s native precision before any real interaction.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 39,
+          "end": 46
+        }
+      ],
+      "title": "",
+      "id": "32521"
+    },
+    {
+      "type": "highlight",
+      "description": "`transferNormalize()` bundles that downward conversion with `SafeERC20.transfer()`, returning the **actual** integer that was moved. Callers think exclusively in 18-dec amounts.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 48,
+          "end": 55
+        }
+      ],
+      "title": "",
+      "id": "32523"
+    },
+    {
+      "type": "highlight",
+      "description": "`transferFromNormalize()` gives the spender path identical treatment, so allowances, scaling and the transfer live in one place.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 57,
+          "end": 64
+        }
+      ],
+      "title": "",
+      "id": "32525"
+    },
+    {
+      "type": "highlight",
+      "description": "`burnNormalize()` re-uses the same logic before destroying tokens – another hotspot where mismatched decimals often cause bugs.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 66,
+          "end": 73
+        }
+      ],
+      "title": "",
+      "id": "32527"
+    },
+    {
+      "type": "highlight",
+      "description": "Higher-level modules speak only `fixed-point`. On the very first deposit the `Vault` converts the raw `RA` amount to `18-decimals`, ensuring later **NAV maths** stay precision-agnostic.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 345,
+          "end": 351
+        }
+      ],
+      "title": "",
+      "id": "32528"
+    },
+    {
+      "type": "highlight",
+      "description": "Elsewhere, a module cashes out with one-liners: `ProtectedUnit`’s burn path pays `PA` and `RA` using `transferNormalize`, so callers receive the correct token-native amounts without extra maths.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 560,
+          "end": 566
+        }
+      ],
+      "title": "",
+      "id": "32532"
+    },
+    {
+      "type": "textOnly",
+      "description": "By funnelling every scale conversion through `TransferHelper` – and batching it with `transfers` or `burns` – rounding errors stay isolated in one file and user interfaces only have to think in a single `18-dec format`. Boiler-plate disappears and forgotten conversions become impossible.",
+      "title": "",
+      "id": "32530"
+    }
+  ]
+}

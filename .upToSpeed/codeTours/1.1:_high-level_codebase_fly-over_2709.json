@@ -1,0 +1,125 @@
+{
+  "title": "1.1: High-Level Codebase Fly-Over",
+  "id": "r3Rki/fY3TAA4avVSOFm+0R22vDIKJghJiPeE7Vb3Jg=",
+  "originalId": 2709,
+  "position": 1,
+  "steps": [
+    {
+      "type": "highlight",
+      "description": "A `Pair` bundles the two underlying tokens plus `price/oracle metadata`.  Lines 37-40 hash the struct in-place – any contract that re-creates the struct derives exactly the same `Id`.",
+      "file": "contracts/libraries/Pair.sol",
+      "highlight": [
+        {
+          "start": 6,
+          "end": 45
+        }
+      ],
+      "title": "",
+      "id": "32309"
+    },
+    {
+      "type": "highlight",
+      "description": "`ModuleCore` is the single upgradeable entry-point proxy. The initializer wires in factories, `AMM` hook and router, then delegates all business logic to `PSM` & `Vault` mix-ins.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 18,
+          "end": 50
+        }
+      ],
+      "title": "",
+      "id": "32310"
+    },
+    {
+      "type": "highlight",
+      "description": "Every live market lives inside one big mapping(`Id⇒State`).  Below it sit the addresses of the other top-level components – a shared registry used by every module.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 24,
+          "end": 35
+        }
+      ],
+      "title": "",
+      "id": "32312"
+    },
+    {
+      "type": "highlight",
+      "description": "Root State book: `globalAssetIdx` tracks epochs; `info` stores the `Pair`; `ds`, `psm` and `vault` sub-books keep per-epoch ledgers.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 22
+        }
+      ],
+      "title": "",
+      "id": "32314"
+    },
+    {
+      "type": "highlight",
+      "description": "`depositPsm()` is a wafer-thin wrapper: after guard checks it simply calls `state.deposit()` in `PsmLib` and emits an event.",
+      "file": "contracts/core/Psm.sol",
+      "highlight": [
+        {
+          "start": 82,
+          "end": 94
+        }
+      ],
+      "title": "",
+      "id": "32316"
+    },
+    {
+      "type": "highlight",
+      "description": "`PsmLib` hosts all PSM maths. Line 40 caps any per-cent fee at `5 ether` (= **5 %**). We’ll dive into the 600-line behemoth later.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 22,
+          "end": 41
+        }
+      ],
+      "title": "",
+      "id": "32318"
+    },
+    {
+      "type": "highlight",
+      "description": "`depositLv()` follows the same pattern: `guard` ➜ `state.deposit()` in `VaultLib` ➜ `event`.",
+      "file": "contracts/core/Vault.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 37
+        }
+      ],
+      "title": "",
+      "id": "32320"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultLib`’s header hints at its scope: **LP bookkeeping**, **NAV maths**, **fee routing**, **tolerance structs** – all vault heavy-lifting hides here.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "32322"
+    },
+    {
+      "type": "highlight",
+      "description": "`FlashSwapRouter` is the Uni `v4` **router**. `Line 49` maps every `Pair-Id` to a `ReserveState` – the heart of DS flash-swap accounting.",
+      "file": "contracts/core/flash-swaps/FlashSwapRouter.sol",
+      "highlight": [
+        {
+          "start": 24,
+          "end": 50
+        }
+      ],
+      "title": "",
+      "id": "32326"
+    }
+  ]
+}

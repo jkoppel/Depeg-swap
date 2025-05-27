@@ -1,0 +1,98 @@
+{
+  "title": "5.1: Governance / Configuration: Overview",
+  "id": "dtyKXatiqABdAQMfHCFHykozzqq3KwCgA1lGw819Vb0=",
+  "originalId": 2720,
+  "position": 16,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "The **configuration contract** sits at the centre of **governance**. Every adjustable parameter, role and emergency switch funnels through it.",
+      "title": "",
+      "id": "32283"
+    },
+    {
+      "type": "highlight",
+      "description": "Early in the file you can already see how much the protocol delegates to this one place: role definitions, references to `ModuleCore`, `Flash-Swap` router, the freshly deployed `defaultExchangeRateProvider` (line 30) and the global treasury address are all stored here. Other contracts keep no local copies – they ask `Config` whenever they need the current value.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 21,
+          "end": 35
+        }
+      ],
+      "title": "",
+      "id": "32284"
+    },
+    {
+      "type": "highlight",
+      "description": "The constructor immediately spins up a dedicated `ExchangeRateProvider` (line 93) and wires the role hierarchy.  Because `Config` deploys the provider itself there is exactly one provider for the lifetime of this `Config` instance.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 88,
+          "end": 99
+        }
+      ],
+      "title": "",
+      "id": "32285"
+    },
+    {
+      "type": "highlight",
+      "description": "When governance wants to change a rate it does so **through** `Config`.  The helper simply forwards the call to the provider – users can’t bypass this gate.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 418,
+          "end": 423
+        }
+      ],
+      "title": "",
+      "id": "32286"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside the provider the address of the `Config` that created it is stored once (line 18).  Every state-changing call is wrapped in `onlyConfig()` (lines 24-26), guaranteeing that no external actor can update rates without going through the top-level contract.",
+      "file": "contracts/core/ExchangeRateProvider.sol",
+      "highlight": [
+        {
+          "start": 17,
+          "end": 26
+        }
+      ],
+      "title": "",
+      "id": "32287"
+    },
+    {
+      "type": "highlight",
+      "description": "`setRate` is the only mutating function. Thanks to the guard seen earlier, `Config` remains the sole authority able to push new values into the `exchangeRate` mapping.",
+      "file": "contracts/core/ExchangeRateProvider.sol",
+      "highlight": [
+        {
+          "start": 50,
+          "end": 54
+        }
+      ],
+      "title": "",
+      "id": "32288"
+    },
+    {
+      "type": "highlight",
+      "description": "Down-stream modules don’t care about the implementation details; they just import this tiny interface to read rates.  `PSM`, `Vault` and `Router` rely on it to keep themselves decoupled from provider internals.",
+      "file": "contracts/interfaces/IExchangeRateProvider.sol",
+      "highlight": [
+        {
+          "start": 11,
+          "end": 14
+        }
+      ],
+      "title": "",
+      "id": "32289"
+    },
+    {
+      "type": "textOnly",
+      "description": "The relationship is therefore simple:\n`Config` \u0002194; (deploys & owns) \u0002194; `ExchangeRateProvider` \u0002194; (read-only via `interface`) \u0002194; The rest of the protocol.\nKeep that map in mind as we dive deeper in later tours.",
+      "title": "",
+      "id": "32290"
+    }
+  ]
+}

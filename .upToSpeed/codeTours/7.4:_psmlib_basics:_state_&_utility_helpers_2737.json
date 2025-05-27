@@ -1,0 +1,111 @@
+{
+  "title": "7.4: PsmLib Basics: State & Utility Helpers",
+  "id": "Zjd2GDMM98gMi2qOsVDE4r0g3HEtTUxBTJ76PXwvX8Y=",
+  "originalId": 2737,
+  "position": 28,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This tour focuses on what `PsmLibrary` mutates and the helper routines it relies on. We will:\n- map out the helper libraries wired-in at the top of the file\n- look at the fee cap and two key custom errors\n- examine a first group of small mutators that introduce the `self.psm` layout\n- follow the trio that decides and records the latest Depeg-Swap (DS) exchange-rate\n- finish with the lifecycle helpers that archive an epoch when a new issuance starts.",
+      "title": "",
+      "id": "32616"
+    },
+    {
+      "type": "highlight",
+      "description": "Imports reveal every major helper that `PsmLibrary` delegates to.  `Asset` & friends model the tradable instruments; `State` holds all storage; `MathHelper` and `TransferHelper` provide generic arithmetic; others (`Pair`, `DepegSwap` \u00133\u00134) encapsulate business logic.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 4,
+          "end": 19
+        }
+      ],
+      "title": "",
+      "id": "32617"
+    },
+    {
+      "type": "highlight",
+      "description": "The `using` directives plug those helpers directly onto their host `structs` or `types` – this is how most **low-level mutations** are outsourced.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 35
+        }
+      ],
+      "title": "",
+      "id": "32618"
+    },
+    {
+      "type": "highlight",
+      "description": "`MAX_ALLOWED_FEES` (line 40) caps any fee field to 5%. Immediately afterwards two domain-specific custom errors guard rollover flow:\n- `InsufficientRolloverBalance` signals that the caller tries to redeem more than their expired CT balance.\n- `NoActiveIssuance` protects against rolling into the still-current DS epoch.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 36,
+          "end": 47
+        }
+      ],
+      "title": "",
+      "id": "32621"
+    },
+    {
+      "type": "highlight",
+      "description": "These four concise routines are the first touch-points with `self.psm` storage:\n- `initialize` stores the Pair descriptor and sets up the `RedemptionAssetManager`.\n- `updateAutoSell` toggles a user flag inside `psm.autoSell`.\n- `autoSellStatus` exposes that flag.\n- `acceptRolloverProfit` accrues profit into the archive bucket of the current DS index.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 78,
+          "end": 94
+        }
+      ],
+      "title": "",
+      "id": "32622"
+    },
+    {
+      "type": "highlight",
+      "description": "Exchange-rate helpers:\n1. `_getLatestRate` queries an external provider for a global rate, falling back to an id-specific call when the global one is zero.\n2. `_getLatestApplicableRate` returns the lower of that external rate and the on-chain DS rate, enforcing conservative pricing.\n3. `_getLatestApplicableRateAndUpdate` records the chosen value back into `self.ds[self.globalAssetIdx]`, keeping storage in sync.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 52,
+          "end": 76
+        }
+      ],
+      "title": "",
+      "id": "32629"
+    },
+    {
+      "type": "highlight",
+      "description": "`onNewIssuance` sets up the next DS epoch. If a previous issuance exists it ensures expiry and calls `_separateLiquidity`, then resets live DS balances before initialising the fresh `DepegSwap` **struct**.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 290,
+          "end": 302
+        }
+      ],
+      "title": "",
+      "id": "32631"
+    },
+    {
+      "type": "highlight",
+      "description": "`_separateLiquidity` is the archival workhorse. Once per epoch it:\n- converts current RA & PA balances into `archive.raAccrued / paAccrued`\n- records how many CT were circulating (`ctAttributed`)\n- zeroes live RA/PA balances and marks the epoch as already separated.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 304,
+          "end": 325
+        }
+      ],
+      "title": "",
+      "id": "32628"
+    },
+    {
+      "type": "textOnly",
+      "description": "**Key take-away:** almost every state mutation lives inside the nested `psm` layout – balances, per-epoch archives, user opt-ins – while heavy lifting is delegated to specialised helper libraries through the extensive `using` wiring at the top.",
+      "title": "",
+      "id": "32632"
+    }
+  ]
+}

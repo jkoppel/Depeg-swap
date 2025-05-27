@@ -1,0 +1,111 @@
+{
+  "title": "5.4: CorkConfig: Issuance Flow & Fee Auto-Assignment",
+  "id": "wAtesjwr+xls+blU8AmqCSqinDtU9n0Ha0NDdui5wTY=",
+  "originalId": 2728,
+  "position": 19,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "When governance wants to roll the system into a fresh DS epoch it calls `issueNewDs(id, deadline)` on the `Config` contract.\nThe call fans out across three contracts:\n1. `Config` forwards the request to `ModuleCore`, injecting protocol-wide defaults.\n2. `ModuleCore` deploys the new `CT/DS` pair and notifies `FlashSwapRouter` so router-level math keeps using the same defaults.\n3. Control hops back to `Config`, which copies the `AMM` fee schedule from the previous `CT` market onto the just-created one.\nThe next slides walk this chain line-by-line.",
+      "title": "",
+      "id": "32709"
+    },
+    {
+      "type": "highlight",
+      "description": "`issueNewDs` is the external entry point.\n- line 265 passes the request into `ModuleCore` together with stored defaults (`defaultDecayDiscountRateInDays` & `rolloverPeriodInBlocks`).\n- lines 268-269 immediately call two internal helpers that will transplant the AMM fee settings from the expiring epoch.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 262,
+          "end": 270
+        }
+      ],
+      "title": "",
+      "id": "32710"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside `ModuleCore` the real issuance happens.\n- lines 141-152 deploy a fresh `CT` and `DS`.\n- line 155 triggers bookkeeping for the new epoch (`_initOnNewIssuance`).\n- line 157 pushes the same decay & rollover defaults into `FlashSwapRouter` so router-side pricing stays in sync.\n- line 160 calls `VaultLibrary.onNewIssuance`, which may liquidate the expiring AMM if needed.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 141,
+          "end": 161
+        }
+      ],
+      "title": "",
+      "id": "32713"
+    },
+    {
+      "type": "highlight",
+      "description": "`_autoAssignFees` clones the `AMM` **base-fee**.\n1. lines 272-279 figure out the previous `DS` id; first issuance exits early.\n2. lines 281-284 locate the `RA`/`CT` pair for that epoch.\n3. lines 290-295 read the last **baseFee** with `hook.getFee`.\n4. lines 297-302 call `hook.updateBaseFeePercentage` on the new `CT` so traders keep paying the same spread.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 272,
+          "end": 303
+        }
+      ],
+      "title": "",
+      "id": "32715"
+    },
+    {
+      "type": "highlight",
+      "description": "`_autoAssignTreasurySplitPercentage` repeats the pattern for the treasury share of **AMM fees**.\n- lines 315-317 pick the old **CT**.\n- lines 323-326 grab `snapshot.treasuryFeePercentage` via `hook.getMarketSnapshot`.\n- lines 329-334 push that percentage onto the brand-new **CT**.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 305,
+          "end": 335
+        }
+      ],
+      "title": "",
+      "id": "32718"
+    },
+    {
+      "type": "highlight",
+      "description": "Governance can still override the AMM base-fee at any time for the active epoch with `updateAmmBaseFeePercentage`.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 205,
+          "end": 208
+        }
+      ],
+      "title": "",
+      "id": "32719"
+    },
+    {
+      "type": "highlight",
+      "description": "`updateRouterDsExtraFee` tunes the extra fee `FlashSwapRouter` charges on DS transactions and how that fee is split with the treasury.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 229,
+          "end": 235
+        }
+      ],
+      "title": "",
+      "id": "32721"
+    },
+    {
+      "type": "highlight",
+      "description": "`updatePsmBaseRedemptionFeePercentage` adjusts the `PSM`’s **base redemption fee** — the cost `CT` holders pay when exiting to `RA`.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 395,
+          "end": 400
+        }
+      ],
+      "title": "",
+      "id": "32724"
+    },
+    {
+      "type": "textOnly",
+      "description": "Putting it all together: `issueNewDs` launches new swap assets, informs supporting modules, then automatically copies over the trader-facing fee schedule so market behaviour remains continuous.  **Governance** retains full control through the individual `update*` functions whenever a manual tweak is required.",
+      "title": "",
+      "id": "32723"
+    }
+  ]
+}

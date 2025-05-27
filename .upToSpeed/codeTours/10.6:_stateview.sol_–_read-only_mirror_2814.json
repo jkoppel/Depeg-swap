@@ -1,0 +1,111 @@
+{
+  "title": "10.6: StateView.sol – read-only mirror",
+  "id": "YJx5javaCIFyPPV/klk/N6ufnHjTlLmQGDobisOOcYw=",
+  "originalId": 2814,
+  "position": 51,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "`StateView.sol` is a read-only proxy for **ModuleCore**. By deploying it over the same address on a local fork you keep every storage slot exactly where it is, but gain public getters that surface data **ModuleCore** keeps private.",
+      "title": "",
+      "id": "33660"
+    },
+    {
+      "type": "highlight",
+      "description": "The comment and the inheritance line anchor the idea: `StateView` inherits `ModuleState` so its storage layout must remain byte-for-byte identical to the production contract.",
+      "file": "contracts/core/StateView.sol",
+      "highlight": [
+        {
+          "start": 13,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "33661"
+    },
+    {
+      "type": "highlight",
+      "description": "GLOBAL helpers do nothing more than dereference the top-level mapping `states`. Each is declared `external view`, ensuring no state can be mutated.",
+      "file": "contracts/core/StateView.sol",
+      "highlight": [
+        {
+          "start": 18,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "33662"
+    },
+    {
+      "type": "highlight",
+      "description": "First half of the PSM block.  Notice lines 53-55: `rolloverClaims` is a mapping nested inside `poolArchive[dsId]`, itself inside another mapping—proof that the **getters** can walk arbitrarily deep into structs.",
+      "file": "contracts/core/StateView.sol",
+      "highlight": [
+        {
+          "start": 32,
+          "end": 55
+        }
+      ],
+      "title": "",
+      "id": "33663"
+    },
+    {
+      "type": "highlight",
+      "description": "Here we see the use of OpenZeppelin's BitMap to efficiently store boolean flags for each DepegSwap. The getPsmLiquiditySeparated function checks if liquidity has been separated for a specific DepegSwap ID.",
+      "file": "contracts/core/StateView.sol",
+      "highlight": [
+        {
+          "start": 56,
+          "end": 67
+        }
+      ],
+      "title": "",
+      "id": "33664"
+    },
+    {
+      "type": "highlight",
+      "description": "The remaining `PSM getters` expose simple booleans that flag whether deposits or withdrawals are currently paused.",
+      "file": "contracts/core/StateView.sol",
+      "highlight": [
+        {
+          "start": 68,
+          "end": 76
+        }
+      ],
+      "title": "",
+      "id": "33665"
+    },
+    {
+      "type": "highlight",
+      "description": "Vault getters follow the same recipe. Lines 91-93 use another `BitMap` (`lpLiquidated`) to track liquidation status per `dsId`.",
+      "file": "contracts/core/StateView.sol",
+      "highlight": [
+        {
+          "start": 78,
+          "end": 93
+        }
+      ],
+      "title": "",
+      "id": "33666"
+    },
+    {
+      "type": "highlight",
+      "description": "Lines 95-102 return entire `pool structs`, while 103-105 reach into the **nested mapping** `withdrawEligible[user]` to reveal how much a wallet can pull out immediately.",
+      "file": "contracts/core/StateView.sol",
+      "highlight": [
+        {
+          "start": 94,
+          "end": 106
+        }
+      ],
+      "title": "",
+      "id": "33667"
+    },
+    {
+      "type": "textOnly",
+      "description": "All functions are `external view`; no state-changing logic exists. Because the contract’s storage must shadow `ModuleState` exactly, any change to the underlying structs must be replicated here or the view functions would start reading the wrong slots—a classic **EVM storage-collision hazard**.",
+      "title": "",
+      "id": "33668"
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "title": "9.2: Asset Tokens: Expiry, Exchange-Rate & Reserve Logic",
+  "id": "/H9wBVzoOzVrEw4KWIs+PlBVs/MFnIXrp1LpLdPl/SI=",
+  "originalId": 2750,
+  "position": 44,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "We will walk through the implementation of **CT** (`Current Token`), **DS** (`Debt Share`), and **LV** (`Liquidity Vault`) assets to see every piece of extra state they carry beyond a plain `ERC-20` and how that state drives behaviour.",
+      "title": "",
+      "id": "32802"
+    },
+    {
+      "type": "revealFiles",
+      "files": [
+        "contracts/core/assets/Asset.sol"
+      ],
+      "description": "`Asset.sol` is the template used by the factory for all three token flavours. Everything you will learn on the next stops happens inside this file.",
+      "title": "",
+      "id": "32803"
+    },
+    {
+      "type": "highlight",
+      "description": "**ExchangeRate mix-in** – each token receives its own `rate` at construction (line 22) and exposes it with `exchangeRate()` (29-31).  LV tokens are built with `rate = 0` while CT / DS obtain the PSM rate when they are issued.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 19,
+          "end": 31
+        }
+      ],
+      "title": "",
+      "id": "32804"
+    },
+    {
+      "type": "highlight",
+      "description": "Expiry mix-in stores two immutables: `EXPIRY` and `ISSUED_AT` (41-43).  The guard at 45-47 reverts if you try to deploy with a past timestamp, or allows `0` to mean \"never expires\" – that’s exactly the setting used for **LV**.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 40,
+          "end": 51
+        }
+      ],
+      "title": "",
+      "id": "32805"
+    },
+    {
+      "type": "highlight",
+      "description": "Helper views let anyone query the temporal data.  `isExpired()` (56-62) returns false for `LV` (`EXPIRY == 0`) and checks the clock for `CT` / `DS`.  `expiry()` and `issuedAt()` give the raw numbers back (67-73).",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 56,
+          "end": 73
+        }
+      ],
+      "title": "",
+      "id": "32806"
+    },
+    {
+      "type": "highlight",
+      "description": "Asset contract inherits key modules for burning, permits, ownership, expiry, rates and reserves. Key state variables:\n- `DS_ID`: immutable epoch number (0=LV, >0=DS/CT)\n- `pairName`: token name/symbol\n- `marketId`: links to ModuleCore pair\n- `moduleCore`: reserve lookups\n- `factory`: privileged deployment address",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 81,
+          "end": 90
+        }
+      ],
+      "title": "",
+      "id": "32807"
+    },
+    {
+      "type": "highlight",
+      "description": "`onlyFactory` protects post-deployment wiring so that no other party can mutate `marketId` or `moduleCore` later on.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 92,
+          "end": 98
+        }
+      ],
+      "title": "",
+      "id": "32808"
+    },
+    {
+      "type": "highlight",
+      "description": "Constructor flow:\n1. feeds `_rate`, `_pairName`, `_owner`, and `_expiry` into parent mix-ins;\n2. records `pairName` and immutable `DS_ID` (108);\n3. captures `factory = msg.sender` (110).  `AssetFactory` therefore owns this token for the few seconds it takes to finish wiring, then immediately transfers ownership to `ModuleCore`.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 100,
+          "end": 110
+        }
+      ],
+      "title": "",
+      "id": "32809"
+    },
+    {
+      "type": "highlight",
+      "description": "Wiring hooks – both restricted by `onlyFactory`:\n- `setMarketId` binds the token to a `Pair` id so `ModuleCore` can locate its reserves.\n- `setModuleCore` saves the `ModuleCore` proxy address – all reserve math goes through it.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 113,
+          "end": 119
+        }
+      ],
+      "title": "",
+      "id": "32810"
+    },
+    {
+      "type": "highlight",
+      "description": "`getReserves()` interrogates `ModuleCore`:\n1. asks for the latest DS epoch (123).\n2. If this token is that epoch **or** `DS_ID == 0` (LV), it fetches the latest live reserves (129-131).\n3. Otherwise it pulls the archived snapshot for `DS_ID` (132-134).  This guarantees a historical DS still shows the pool composition it was issued against.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 121,
+          "end": 135
+        }
+      ],
+      "title": "",
+      "id": "32811"
+    },
+    {
+      "type": "highlight",
+      "description": "**Owner-only mutations:**\n- `mint()` lets ModuleCore expand supply when users deposit into the pool.\n- `updateRate()` gives ModuleCore a way to refresh a CT / DS rate after yield accrues.\n- `dsId()` is a pure getter for off-chain helpers.",
+      "file": "contracts/core/assets/Asset.sol",
+      "highlight": [
+        {
+          "start": 142,
+          "end": 155
+        }
+      ],
+      "title": "",
+      "id": "32812"
+    },
+    {
+      "type": "highlight",
+      "description": "**Factory path for `CT` & `DS`.**  For every new issuance the factory:\n- builds a `CT` with prefix `\"CT\"` and a `DS` with prefix `\"DS\"` (216-235);\n- sets the same `marketId` and `moduleCore` on both (224-238);\n- passes the current PSM rate and the upcoming `dsId` so each carries its own `rate` and `DS_ID`.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 214,
+          "end": 239
+        }
+      ],
+      "title": "",
+      "id": "32813"
+    },
+    {
+      "type": "highlight",
+      "description": "**Factory path for LV – a single token per pair:**\n- created with prefix `\"LV\"` (269-271)\n- expiry and rate forced to zero (270-271)\n- `DS_ID` hard-coded to 0 so `getReserves()` always interprets it as \"latest\"\nThe factory stores the address in `lvs` (279-280) for future look-ups.",
+      "file": "contracts/core/assets/AssetFactory.sol",
+      "highlight": [
+        {
+          "start": 256,
+          "end": 274
+        }
+      ],
+      "title": "",
+      "id": "32814"
+    },
+    {
+      "type": "textOnly",
+      "description": "**Putting it together:**\n\n- **CT** and **DS** tokens represent a specific issuance epoch. They store that epoch in `DS_ID`, keep their own `rate`, and carry an absolute expiry timestamp. When expired they fall back to LV redemption logic.\n- **LV** is the timeless liquidity token: `rate = 0`, `EXPIRY = 0`, `DS_ID = 0`. Its balance of reserves always tracks the most recent state.\n- All three flavours rely on `ModuleCore` for minting, rate updates, and reserve accounting, and only `ModuleCore` (as owner) can exercise those privileges.\n\nYou now know every field and behaviour that distinguishes these Cork protocol assets from a vanilla ERC-20.",
+      "title": "",
+      "id": "32815"
+    }
+  ]
+}

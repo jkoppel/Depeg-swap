@@ -1,0 +1,137 @@
+{
+  "title": "3.2: Guard: DepegSwap State Checks",
+  "id": "8cT3WbAAQKqZFRoVpmtJNGU+/ohmQ1jnDYnX8u4i3qQ=",
+  "originalId": 2714,
+  "position": 7,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This short tour shows how a dozen high-value **PSM** and **Vault** entry-points stay safe thanks to a tiny `helper library`.",
+      "title": "",
+      "id": "32198"
+    },
+    {
+      "type": "highlight",
+      "description": "The header reveals the purpose: checks for `DepegSwap` (time-boxed synthetic) and, indirectly, for `LvAsset`. Implemented as a `library` so any contract can import and inline the guards.",
+      "file": "contracts/libraries/Guard.sol",
+      "highlight": [
+        {
+          "start": 1,
+          "end": 15
+        }
+      ],
+      "title": "",
+      "id": "32199"
+    },
+    {
+      "type": "highlight",
+      "description": "Three custom errors keep revert reasons explicit – auditors and front-ends instantly know whether the swap is expired, not yet expired, or simply un-initialised.",
+      "file": "contracts/libraries/Guard.sol",
+      "highlight": [
+        {
+          "start": 16,
+          "end": 23
+        }
+      ],
+      "title": "",
+      "id": "32200"
+    },
+    {
+      "type": "highlight",
+      "description": "`_onlyNotExpired()` checks `ds.isExpired()` (line 26).  If the synthetic has already matured the call halts with `Expired()`.",
+      "file": "contracts/libraries/Guard.sol",
+      "highlight": [
+        {
+          "start": 25,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "32201"
+    },
+    {
+      "type": "highlight",
+      "description": "The mirror image, `_onlyExpired()`, guarantees that post-maturity flows cannot be executed too early.",
+      "file": "contracts/libraries/Guard.sol",
+      "highlight": [
+        {
+          "start": 31,
+          "end": 35
+        }
+      ],
+      "title": "",
+      "id": "32202"
+    },
+    {
+      "type": "highlight",
+      "description": "`_onlyInitialized()` blocks any access to an un-set `DepegSwap`, a common early-deployment pitfall.",
+      "file": "contracts/libraries/Guard.sol",
+      "highlight": [
+        {
+          "start": 37,
+          "end": 41
+        }
+      ],
+      "title": "",
+      "id": "32203"
+    },
+    {
+      "type": "highlight",
+      "description": "`safeBeforeExpired()` composes the previous two checks – first initialise, then ensure the swap is still live.  Deposit and early-redeem paths start here.",
+      "file": "contracts/libraries/Guard.sol",
+      "highlight": [
+        {
+          "start": 43,
+          "end": 46
+        }
+      ],
+      "title": "",
+      "id": "32204"
+    },
+    {
+      "type": "highlight",
+      "description": "`safeAfterExpired()` provides the complementary protection for rollover and other post-expiry operations.",
+      "file": "contracts/libraries/Guard.sol",
+      "highlight": [
+        {
+          "start": 48,
+          "end": 51
+        }
+      ],
+      "title": "",
+      "id": "32205"
+    },
+    {
+      "type": "highlight",
+      "description": "Looking at a real deposit flow, we see the guard check positioned strategically - it validates the tranche's expiry status before any asset transfers can occur.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 340,
+          "end": 344
+        }
+      ],
+      "title": "",
+      "id": "32206"
+    },
+    {
+      "type": "highlight",
+      "description": "The `Vault` re-exports the same guard so every LV deposit is automatically protected.  A single helper secures two distinct subsystems.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 144,
+          "end": 149
+        }
+      ],
+      "title": "",
+      "id": "32207"
+    },
+    {
+      "type": "textOnly",
+      "description": "With less than fifty lines, `Guard.sol` centralises expiry and init checks and keeps `PSM` & `Vault` logic consistently error-proof.",
+      "title": "",
+      "id": "32208"
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "title": "5.3: CorkConfig: Global Parameters & NAV Thresholds",
+  "id": "X0R8TiKCEE8F5NeETha3ukoH8UgrOGFSdmSLQOnQ7IQ=",
+  "originalId": 2726,
+  "position": 18,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Everyday parameter tuning is concentrated in one place – `CorkConfig`.  We will zoom in on the exact storage variables and manager-only setters operators use most often.",
+      "title": "",
+      "id": "32396"
+    },
+    {
+      "type": "highlight",
+      "description": "Changing those defaults is a one-liner for the address holding **MANAGER_ROLE**:\n- `updateDecayDiscountRateInDays` (`103`) rewrites the discount profile.\n- `updateRolloverPeriodInBlocks` (`107`) moves the rollover window.\n- `updateDefaultNavThreshold` (`111`) lifts or lowers the global NAV floor.\nNo other logic is triggered, so the effect is immediate and protocol-wide.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 102,
+          "end": 112
+        }
+      ],
+      "title": "",
+      "id": "32400"
+    },
+    {
+      "type": "highlight",
+      "description": "A single market can receive a bespoke threshold via `updateNavThreshold`.  The call is forwarded to `ModuleCore.updateVaultNavThreshold`, so only the vault identified by `Id` is affected.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 114,
+          "end": 116
+        }
+      ],
+      "title": "",
+      "id": "32426"
+    },
+    {
+      "type": "highlight",
+      "description": "`setModuleCore` locks in the address of the main state machine. Each wiring function in the next slides follows the same pattern: **manager-only, reject zero address, store, emit event**.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 165,
+          "end": 171
+        }
+      ],
+      "title": "",
+      "id": "32427"
+    },
+    {
+      "type": "highlight",
+      "description": "`setModuleCore` locks in the address of the main state machine. Each wiring function in the next slides follows the same pattern: **manager-only, reject zero address, store, emit event**.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 165,
+          "end": 171
+        }
+      ],
+      "title": "",
+      "id": "32411"
+    },
+    {
+      "type": "highlight",
+      "description": "`setFlashSwapCore` links the flash-swap router that relies on the global discount rate and extra fees.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 173,
+          "end": 179
+        }
+      ],
+      "title": "",
+      "id": "32428"
+    },
+    {
+      "type": "highlight",
+      "description": "`setHook` wires the custom `Uniswap-V4` hook used for AMM fees and market snapshots.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 181,
+          "end": 187
+        }
+      ],
+      "title": "",
+      "id": "32429"
+    },
+    {
+      "type": "highlight",
+      "description": "`setProtectedUnitFactory` points to the factory that deploys and tracks hedge units for each pair.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 189,
+          "end": 195
+        }
+      ],
+      "title": "",
+      "id": "32430"
+    },
+    {
+      "type": "highlight",
+      "description": "`setTreasury` designates where protocol fees ultimately flow.",
+      "file": "contracts/core/CorkConfig.sol",
+      "highlight": [
+        {
+          "start": 197,
+          "end": 203
+        }
+      ],
+      "title": "",
+      "id": "32423"
+    },
+    {
+      "type": "textOnly",
+      "description": "Quick checklist next time you need a tweak:\n- Lines 35-41 show the current global values, lines 102-112 change them.\n- Line 114 handles per-pair **NAV overrides**.\n- Lines 165-203 wire or re-wire dependent modules.\nWith these locations mastered, day-to-day protocol tuning is a controlled, auditable process.",
+      "title": "",
+      "id": "32419"
+    }
+  ]
+}

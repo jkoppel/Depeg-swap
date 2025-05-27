@@ -1,0 +1,85 @@
+{
+  "title": "4.1: ERC-20 Permit Helpers: Overview",
+  "id": "UjfmlQGkR1OY9EG0HXYQ63tlGGYtPrbZkogX1Fsd0ZM=",
+  "originalId": 2715,
+  "position": 13,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "This short tour pinpoints the two files that form the helper and surfaces the single behavioural deviation from `OpenZeppelin’s ERC-20 Permit`: the signature is tied to a specific function.",
+      "title": "",
+      "id": "32209"
+    },
+    {
+      "type": "highlight",
+      "description": "The public interface mirrors `IERC20Permit` but line 66-75 adds a final `string memory functionName` parameter, forcing the signer to declare which function the permit should authorise.",
+      "file": "contracts/libraries/ERC/ICustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 64,
+          "end": 75
+        }
+      ],
+      "title": "",
+      "id": "32210"
+    },
+    {
+      "type": "highlight",
+      "description": "`nonces()` and `DOMAIN_SEPARATOR()` (lines 84-90) preserve EIP-712 replay-protection, so off-chain signatures still advance a nonce and stay bound to the token’s domain.",
+      "file": "contracts/libraries/ERC/ICustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 77,
+          "end": 90
+        }
+      ],
+      "title": "",
+      "id": "32211"
+    },
+    {
+      "type": "highlight",
+      "description": "`CustomERC20Permit` extends `ERC20`, `ICustomERC20Permit`, `EIP712`, and `Nonces`.  Line 21-23 shows the updated `PERMIT_TYPEHASH` that now expects a `bytes32 functionHash` field.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 18,
+          "end": 24
+        }
+      ],
+      "title": "",
+      "id": "32212"
+    },
+    {
+      "type": "highlight",
+      "description": "`OpenZeppelin`’s revert strings are replaced by lightweight custom errors `ERC2612ExpiredSignature` and `ERC2612InvalidSigner` (lines 28-33).",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 25,
+          "end": 34
+        }
+      ],
+      "title": "",
+      "id": "32213"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside the overridden `permit`, the supplied `functionName` is first hashed (line 61) and injected into the `EIP-712` struct (line 63).  The rest—deadline check, signature recovery, and `_approve`—follows `OZ`’s original flow.",
+      "file": "contracts/libraries/ERC/CustomERC20Permit.sol",
+      "highlight": [
+        {
+          "start": 46,
+          "end": 72
+        }
+      ],
+      "title": "",
+      "id": "32214"
+    },
+    {
+      "type": "textOnly",
+      "description": "Any `Cork` contract that needs `ERC-2612` approvals tied to a concrete call can import this helper, gaining standard permit ergonomics with the extra safety of **function-specific signatures**.",
+      "title": "",
+      "id": "32215"
+    }
+  ]
+}

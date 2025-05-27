@@ -1,0 +1,53 @@
+{
+  "title": "12.4: ProtectedUnit.sol – Mint flow",
+  "id": "8KVt+QuL+Z9YAGgxrRNx4ehbksWQbUrDy3+BC9GIvtI=",
+  "originalId": 2841,
+  "position": 65,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "A **Protected Unit** (`PU`) is a receipt token that is always backed by two assets:\n- `DS` – a debt-security that accrues value.\n- `PA` – the pegged asset that redeems that security.\n\nMinting the **\"happy path\"** therefore has two steps:\n1.  Quote how many `DS` & `PA` must be supplied for a requested `PU` amount.\n2.  Pull those two exact amounts from the caller using **Uniswap Permit2**, so no unlimited approvals linger.\n\nWe will follow that path start-to-finish.",
+      "title": "",
+      "id": "34081"
+    },
+    {
+      "type": "highlight",
+      "description": "The contract’s own `previewMint()` wraps that helper.\n1. Lines 393-400 reject a zero amount or anything beyond the `mintCap`.\n2. Line 401 pulls the `quote` we just saw.\n3. Line 403 converts only the `PA` figure from fixed-18 math units to the `PA` token’s native decimals via `TransferHelper` – `DS` already uses 18 decimals.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 392,
+          "end": 404
+        }
+      ],
+      "title": "",
+      "id": "34083"
+    },
+    {
+      "type": "highlight",
+      "description": "`TransferHelper.fixedToTokenNativeDecimals`:\nIt shifts a value from the library’s 18-dec fixed-point world to whatever decimals the real **ERC-20** uses, hiding all rounding logic from `__mint`.",
+      "file": "contracts/libraries/TransferHelper.sol",
+      "highlight": [
+        {
+          "start": 38,
+          "end": 42
+        }
+      ],
+      "title": "",
+      "id": "34084"
+    },
+    {
+      "type": "highlight",
+      "description": "The second mint overload batches both approvals into one `Permit2` signature.\n- Lines 471-475 enforce that the permit array is exactly two entries in DS, PA order – removing any chance of mixing tokens.\n- Lines 482-485 ensure each allowance is at least the quoted amount.\n- Line 488 `PERMIT2.permit` installs those bounded allowances, after which execution flows straight into `__mint`.",
+      "file": "contracts/core/assets/ProtectedUnit.sol",
+      "highlight": [
+        {
+          "start": 469,
+          "end": 488
+        }
+      ],
+      "title": "",
+      "id": "34087"
+    }
+  ]
+}

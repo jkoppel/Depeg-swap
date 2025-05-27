@@ -1,0 +1,85 @@
+{
+  "title": "12.7: ProtectedUnitMath.sol – calculation helpers",
+  "id": "EIShKNYrcdptvutIfNdjXvR+vlCzlpKUPmq67UfkTLY=",
+  "originalId": 2843,
+  "position": 68,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Everything in this pool is settled with PRB-Math’s 18-decimals fixed-point `UD60x18`.  We will step through the five helpers in `ProtectedUnitMath` that every mint, preview, or withdraw operation ultimately calls.",
+      "title": "",
+      "id": "33967"
+    },
+    {
+      "type": "highlight",
+      "description": "mint() turns a PA + DS deposit into liquidity tokens.\n- Lines 19-24 bootstrap the pool: deposits must be equal and liquidity mints 1-for-1.\n- Lines 26-28 are the steady-state formula `liquidity = amountPa × totalLiquidity ÷ reservePa` carried out with `ud`, `mul`, `div`, then `unwrap` back to uint.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 12,
+          "end": 29
+        }
+      ],
+      "title": "",
+      "id": "33968"
+    },
+    {
+      "type": "highlight",
+      "description": "`getProportionalAmount()` is a small utility that applies the very same ratio rule: given `token0` amount, compute `token1` so the position stays on the reserves line.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 31,
+          "end": 37
+        }
+      ],
+      "title": "",
+      "id": "33969"
+    },
+    {
+      "type": "highlight",
+      "description": "previewMint() answers the inverse question – \"if I want `amount` liquidity tokens, how much DS and PA must I bring?\"\n- Bootstrap branch (44-46) mirrors `mint`: equal PA and DS.\n- Lines 48-49 scale each reserve by `amount ÷ totalLiquidity`, matching the formula used inside `mint()`.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 39,
+          "end": 50
+        }
+      ],
+      "title": "",
+      "id": "33970"
+    },
+    {
+      "type": "highlight",
+      "description": "`withdraw()` pays out a caller’s share of every reserve.\nGuard clauses (67-73) reject nonsense, then each asset uses the familiar `liquidity × reserve ÷ totalLiquidity` pattern (75-80) – repeated for PA, DS, and RA.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 60,
+          "end": 81
+        }
+      ],
+      "title": "",
+      "id": "33971"
+    },
+    {
+      "type": "highlight",
+      "description": "`normalizeDecimals()` is only a thin wrapper around `TransferHelper`, letting the rest of the library stay in pure 18-dec arithmetic even when the token itself uses another decimal count.",
+      "file": "contracts/libraries/ProtectedUnitMath.sol",
+      "highlight": [
+        {
+          "start": 52,
+          "end": 57
+        }
+      ],
+      "title": "",
+      "id": "33972"
+    },
+    {
+      "type": "textOnly",
+      "description": "All five routines share the same simple proportion, consistently expressed with `18-dec fixed-point math`. With them you can audit every number that flows through `mint`, `preview`, or `withdraw`.",
+      "title": "",
+      "id": "33973"
+    }
+  ]
+}

@@ -1,0 +1,183 @@
+{
+  "title": "7.6: PsmLib Repurchase Mechanics",
+  "id": "0OSLlBozInkM44l7RbX3L/qItFiz1ruwN7beyGZTYu4=",
+  "originalId": 2738,
+  "position": 30,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "We will walk through how the PSM lets a user repurchase PA + DS with RA.\nThe path is  `previewRepurchase()`  \u000212  `repurchase()`  \u000212  `_attributeFeeToTreasury`/`_splitFee()`, with a brief stop at `MathHelper` and `VaultLib`.\nAlong the way we will highlight:\n\u001f where the price comes from\n\u001f how the time-dependent repurchase fee is computed\n\u001f the liquidity guards\n\u001f the balance mutations and fee split\n\u001f the config knobs controlling the fee",
+      "title": "",
+      "id": "32634"
+    },
+    {
+      "type": "highlight",
+      "description": "`previewRepurchase()` picks the active DS issuance and fetches a price.\nLine 492 selects the current issuance, then `Guard.safeBeforeExpired()` (493) blocks stale series.\n`_getLatestApplicableRate()` (495-497) returns the **LOWER** of the oracle rate and the DS’s internal rate, so the protocol never overpays.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 490,
+          "end": 497
+        }
+      ],
+      "title": "",
+      "id": "32635"
+    },
+    {
+      "type": "highlight",
+      "description": "Fee is assessed before any conversion.\n`MathHelper.calculateRepurchaseFee` `(500-502)` combines the base fee percentage with a time-decay factor derived from issuedAt ↔ expiry ↔ now.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 498,
+          "end": 503
+        }
+      ],
+      "title": "",
+      "id": "32636"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside `MathHelper` the fee factor is `basePercentage` × `t`, where `t` ∈ `[0,1]` grows linearly from issue to expiry.\n`fee` = `amount` × `feeFactor` / `1e18`, and the helper also returns the exact percentage for UI display.",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 318,
+          "end": 337
+        }
+      ],
+      "title": "",
+      "id": "32637"
+    },
+    {
+      "type": "highlight",
+      "description": "After stripping the fee (505):\n- `RA` is converted to 18-decimals (506).\n- `receivedPa` = `amount` / `exchangeRate` → PA native decimals (509-510).\n- `receivedDs` mirrors the same 18-dec amount (511).",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 505,
+          "end": 512
+        }
+      ],
+      "title": "",
+      "id": "32638"
+    },
+    {
+      "type": "highlight",
+      "description": "Lines 513-519 enforce that the PSM actually holds enough PA and DS; otherwise the call reverts with `InsufficientLiquidity`.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 513,
+          "end": 519
+        }
+      ],
+      "title": "",
+      "id": "32639"
+    },
+    {
+      "type": "highlight",
+      "description": "`repurchase()` starts by refreshing the rate (539) then re-runs `previewRepurchase`.\nImmediately afterwards the PSM’s accounting balances are decreased by the amounts promised to the buyer (545-546).",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 539,
+          "end": 545
+        }
+      ],
+      "title": "",
+      "id": "32640"
+    },
+    {
+      "type": "highlight",
+      "description": "At this stage, the PSM receives and processes the buyer's RA payment. The full amount is initially locked, but the fee portion is immediately unlocked so it can be used for other purposes in the system.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 545,
+          "end": 554
+        }
+      ],
+      "title": "",
+      "id": "32641"
+    },
+    {
+      "type": "highlight",
+      "description": "**Asset payout**: `PA` (559) and `DS` (562) are transferred from the contract directly to the buyer.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 558,
+          "end": 563
+        }
+      ],
+      "title": "",
+      "id": "32642"
+    },
+    {
+      "type": "highlight",
+      "description": "**Fee handling path:**\n1. `_attributeFeeToTreasury` splits the fee (564-566).\n2. `VaultLibrary.allocateFeesToVault()` stakes the remainder as protocol equity (567-568).",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 564,
+          "end": 568
+        }
+      ],
+      "title": "",
+      "id": "32643"
+    },
+    {
+      "type": "highlight",
+      "description": "`_attributeFeeToTreasury()` uses `_splitFee` to break the fee into treasury and remaining portions, then unlocks the treasury share (578-579).",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 571,
+          "end": 579
+        }
+      ],
+      "title": "",
+      "id": "32644"
+    },
+    {
+      "type": "highlight",
+      "description": "This helper function handles the division of fees between what goes to the treasury and what remains in the system, using a base percentage to determine the split.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 581,
+          "end": 588
+        }
+      ],
+      "title": "",
+      "id": "32645"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultLibrary.allocateFeesToVault()` simply increases `vault.ra.locked` – the fee becomes idle RA inside the Vault.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 550,
+          "end": 553
+        }
+      ],
+      "title": "",
+      "id": "32646"
+    },
+    {
+      "type": "highlight",
+      "description": "**Governance knobs:**\n`repurchaseFeePercentage()` exposes the current base fee (454-456).\n`updateRepurchaseFeePercentage()` lets governance change it, capped at `MAX_ALLOWED_FEES = 5 e18` (458-462).",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 446,
+          "end": 462
+        }
+      ],
+      "title": "",
+      "id": "32647"
+    }
+  ]
+}

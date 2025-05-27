@@ -1,0 +1,241 @@
+{
+  "title": "3.4: MathHelper: Liquidity, NAV & Fee Calculations",
+  "id": "aOhP16pxs8/1j2+iT8R6wynXVe3Q1JRO/jcmKzO8afU=",
+  "originalId": 2716,
+  "position": 9,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "We’ll tour `MathHelper.sol`: the 400-line vault-side math toolbox.  It underpins splits, swaps, fees, NAV, deposits, redemptions, and repurchase-fees—and is reused by higher-level libraries like `VaultLib`, `PsmLib`, and router/state modules.",
+      "title": "",
+      "id": "32234"
+    },
+    {
+      "type": "highlight",
+      "description": "Two foundational constants define fixed-point behavior and AMM tolerance:\n- `DEFAULT_DECIMAL` = 18 → the 1e18 scale used everywhere (line 15).\n- `UNI_STATIC_TOLERANCE` = 95e18 → 95 % slippage guard when adding liquidity (line 19).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 15,
+          "end": 19
+        }
+      ],
+      "title": "",
+      "id": "32235"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateProvideLiquidityAmountBasedOnCtPrice(amountra, priceRatio)` splits an RA blob into RA+CT matching the current CT price:\n1. Line 34 converts total RA → CT: `ct = amountra / (priceRatio + 1)`.\n2. Line 36 leaves the residual RA.\nThis guarantees the two sides have equal market value.",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 29,
+          "end": 37
+        }
+      ],
+      "title": "",
+      "id": "32236"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateEqualSwapAmount(pa, exchangeRate)` computes a perfectly balanced swap by multiplying `pa × exchangeRate` in one line (line 47).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 46,
+          "end": 48
+        }
+      ],
+      "title": "",
+      "id": "32237"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculatePercentageFee(fee1e18, amount)` delegates to **SwapperMathLibrary.calculatePercentage** for a fee with full 1e18 precision (line 60).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 59,
+          "end": 62
+        }
+      ],
+      "title": "",
+      "id": "32238"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateWithTolerance(ra, ct, tolerance)` scales both legs by the tolerance factor: lines 120–122 keep calculations in `UD60x18` and only `unwrap` at the end.",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 115,
+          "end": 124
+        }
+      ],
+      "title": "",
+      "id": "32239"
+    },
+    {
+      "type": "highlight",
+      "description": "**`separateLiquidity(totalAmount, totalLvIssued, totalLvWithdrawn)`** **early-exit**: if no **LV** has ever been issued or withdrawn (**line 99**), assign all assets to the **AMM** (**line 100**) and zero out withdrawal attribution.",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 93,
+          "end": 101
+        }
+      ],
+      "title": "",
+      "id": "32240"
+    },
+    {
+      "type": "highlight",
+      "description": "Normal path for `separateLiquidity`:\n- `ratePerLv` = `totalAmount` / `totalLvIssued` (line 104).\n- `attributedWithdrawal` = `ratePerLv` × `totalLvWithdrawn` (lines 106–107).\n- `attributedAmm` = `totalAmount` − `attributedWithdrawal` (line 108).\nAll values unwrapped on lines 110–112.",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 103,
+          "end": 112
+        }
+      ],
+      "title": "",
+      "id": "32241"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateUniLpValue(totalLpSupply, totalRaReserve, totalCtReserve)` returns per-LP RA & CT value:\n`valueRaPerLp` = `totalRaReserve` / `totalLpSupply` (line 131), same for CT (line 132).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 126,
+          "end": 133
+        }
+      ],
+      "title": "",
+      "id": "32242"
+    },
+    {
+      "type": "highlight",
+      "description": "Two structs group inputs and outputs for LV-valuation:\n- `UniLpValueParams` bundles total LP & reserves plus total LV issued (lines 167–173).\n- `UniLpValueResult` captures per-LV and per-LP outcomes (lines 175–181).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 167,
+          "end": 182
+        }
+      ],
+      "title": "",
+      "id": "32243"
+    },
+    {
+      "type": "highlight",
+      "description": "`_calculateLvValueFromUniLp(params)` uses those structs:\n1. Reuse per-LP values (line 189).\n2. Multiply LP-owned × per-LP price, then ÷ total LV → per-LV price (lines 192–196).\n3. Rebuild total LV RA/CT value (lines 198–199).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 184,
+          "end": 199
+        }
+      ],
+      "title": "",
+      "id": "32244"
+    },
+    {
+      "type": "highlight",
+      "description": "`NavParams` gathers every input needed to compute NAV:\n`AMM` reserves, vault buckets (CT, DS, LP, idle RA), supplies, and time‐weight `oneMinusT`.",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 210,
+          "end": 219
+        }
+      ],
+      "title": "",
+      "id": "32245"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateInternalPrice(params)` marks AMM reserves to RA terms:\n- derive `t = 1 − oneMinusT` (line 246).\n- `CT price = (reserveRa/reserveCt)^t` (line 247).\n- `DS price = 1 − CT price` (line 250).\n- `RA price = 1` (line 252).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 245,
+          "end": 255
+        }
+      ],
+      "title": "",
+      "id": "32246"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateNavCombined(params)` applies internal prices to vault buckets:\n1. `navCt` & `navDs` via `calculateNav` (lines 264–266).\n2. LP split: convert `vaultLp` → `RA` & `CT` portions (lines 267–272).\n3. idle `RA` at par (line 273).\n4. sum `RA`+`CT` LP value (line 275).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 257,
+          "end": 276
+        }
+      ],
+      "title": "",
+      "id": "32247"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateNav()` wraps `calculateNavCombined`, then sums `CT`, `DS`, `LP` and adds idle `RA`, finally unwrapping into a `uint256` (lines 235–236).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 232,
+          "end": 237
+        }
+      ],
+      "title": "",
+      "id": "32248"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateDepositLv(nav, depositAmount, lvSupply)` mints LV shares proportional to deposit size:\n`navPerShare` = `nav` / `lvSupply` (line 227) \u000212; `depositAmount` \u0000F7 `navPerShare` (line 229).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 222,
+          "end": 230
+        }
+      ],
+      "title": "",
+      "id": "32249"
+    },
+    {
+      "type": "highlight",
+      "description": "Redemption helpers:\n- `RedeemParams` & `RedeemResult` structs outline inputs/outputs (lines 278–286, 288–294).\n- `calculateRedeemLv()` uses a single proportional factor = `amountLvClaimed / totalLvIssued` (line 297) and scales each vault bucket accordingly (lines 299–303).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 278,
+          "end": 304
+        }
+      ],
+      "title": "",
+      "id": "32250"
+    },
+    {
+      "type": "highlight",
+      "description": "`calculateRepurchaseFee(start, end, current, amount, baseFee%)`:\n1. Lines 325–329 compute `t` via `BuyMathBisectionSolver.computeT`.\n2. Line 331 scales `baseFee%` × `t` → `feeFactor`, then applies `calculatePercentage` → concrete fee amount (line 333).",
+      "file": "contracts/libraries/MathHelper.sol",
+      "highlight": [
+        {
+          "start": 318,
+          "end": 337
+        }
+      ],
+      "title": "",
+      "id": "32251"
+    },
+    {
+      "type": "textOnly",
+      "description": "That covers the core routines in `MathHelper.sol`. Almost every core module (`VaultLib`, `PsmLib`, `RouterState`, etc.) leans on these utilities. Mastering this single library unlocks understanding of the entire protocol.",
+      "title": "",
+      "id": "32252"
+    }
+  ]
+}

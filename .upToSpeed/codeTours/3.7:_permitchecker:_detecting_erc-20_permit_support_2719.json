@@ -1,0 +1,47 @@
+{
+  "title": "3.7: PermitChecker: Detecting ERC-20 Permit Support",
+  "id": "P4cztiHHE0alhiRvO3kZL4gdHv6mNYjuPmM3Y9/OOe4=",
+  "originalId": 2719,
+  "position": 12,
+  "steps": [
+    {
+      "type": "highlight",
+      "description": "`PermitChecker` lives in the generic libraries folder. Its NatSpec comment makes its mission explicit—*discover at runtime if a token supports **ERC-20 Permit***.",
+      "file": "contracts/libraries/PermitChecker.sol",
+      "highlight": [
+        {
+          "start": 6,
+          "end": 10
+        }
+      ],
+      "title": "",
+      "id": "32363"
+    },
+    {
+      "type": "highlight",
+      "description": "First probe – `_hasNonces()`.  The library calls `nonces(address(0))` inside `try/catch`.  Using the zero address keeps the call read-only (no one can ever sign for it) and it will revert if the function is missing, which cleanly flags *no permit support*.",
+      "file": "contracts/libraries/PermitChecker.sol",
+      "highlight": [
+        {
+          "start": 16,
+          "end": 22
+        }
+      ],
+      "title": "",
+      "id": "32369"
+    },
+    {
+      "type": "highlight",
+      "description": "Second probe – `_hasDomainSeparator()`.  A genuine **ERC-2612** token must expose an **EIP-712** `DOMAIN_SEPARATOR()`.  Absence or revert here likewise flips the overall result to `false`.",
+      "file": "contracts/libraries/PermitChecker.sol",
+      "highlight": [
+        {
+          "start": 24,
+          "end": 30
+        }
+      ],
+      "title": "",
+      "id": "32371"
+    }
+  ]
+}

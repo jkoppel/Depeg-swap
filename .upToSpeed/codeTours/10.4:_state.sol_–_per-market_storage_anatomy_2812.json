@@ -1,0 +1,215 @@
+{
+  "title": "10.4: State.sol – per-market storage anatomy",
+  "id": "O+AdnDqcAFvO7lIm/Fy2kxb3nPNMpD+NOjl+oT1lyUE=",
+  "originalId": 2812,
+  "position": 49,
+  "steps": [
+    {
+      "type": "textOnly",
+      "description": "Every market keeps its entire mutable state inside one `State` struct. Walking through that struct field-by-field shows where the protocol remembers the life-cycle of each `DepegSwap` epoch, **PSM book-keeping** and **LV vault accounting**.",
+      "title": "",
+      "id": "33766"
+    },
+    {
+      "type": "highlight",
+      "description": "The State struct tracks four key elements:\n- line 16 – `globalAssetIdx` tracks the current epoch/dsId\n- line 17 – `info` stores the market's Pair data\n- line 19 – `ds` maps dsIds to DepegSwap structs\n- lines 20-21 – `psm` and `vault` maintain separate storage trees",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 14,
+          "end": 22
+        }
+      ],
+      "title": "",
+      "id": "33767"
+    },
+    {
+      "type": "highlight",
+      "description": "When a new epoch is issued `ModuleCore` bumps `globalAssetIdx` (170-171) before delegating to `PsmLibrary`. This assignment guarantees that subsequent reads & writes use the fresh `dsId`.",
+      "file": "contracts/core/ModuleCore.sol",
+      "highlight": [
+        {
+          "start": 168,
+          "end": 172
+        }
+      ],
+      "title": "",
+      "id": "33768"
+    },
+    {
+      "type": "highlight",
+      "description": "Inside `PsmLibrary.onNewIssuance` the new `DepegSwap` struct is stored (line 301). This is the sole write-path for the `ds` mapping shown earlier.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 298,
+          "end": 302
+        }
+      ],
+      "title": "",
+      "id": "33769"
+    },
+    {
+      "type": "highlight",
+      "description": "**PsmState** (27-40) groups all variables touched by **PSM** flows:\n- `balances` – rolling RA/PA/CT/DS tallies.\n- `repurchaseFee`… – dynamic fee configuration.\n- `liquiditySeparated` – **BitMap** that marks epochs whose RA/PA have been carved out after expiry.\n- `poolArchive` – per-epoch snapshots (next slide).\n- `autoSell` – user opt-in for automatic router selling.\n- `pause flags` – deposit / withdrawal / repurchase switches.\n- base redemption fee & split for DS+PA redemptions.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 27,
+          "end": 40
+        }
+      ],
+      "title": "",
+      "id": "33770"
+    },
+    {
+      "type": "highlight",
+      "description": "Example: `_separateLiquidity()` writes `liquiditySeparated` (305 & 325). The first call for an epoch snapshots `RA`/`PA` into `PsmPoolArchive` and flips the bit, preventing repeated separation.",
+      "file": "contracts/libraries/PsmLib.sol",
+      "highlight": [
+        {
+          "start": 303,
+          "end": 325
+        }
+      ],
+      "title": "",
+      "id": "33771"
+    },
+    {
+      "type": "highlight",
+      "description": "Pause flags are enforced centrally.  `ModuleState.PSMDepositNotPaused` (95-99) reverts if `isDepositPaused` is true; similar helpers guard withdrawals and repurchases.",
+      "file": "contracts/core/ModuleState.sol",
+      "highlight": [
+        {
+          "start": 94,
+          "end": 99
+        }
+      ],
+      "title": "",
+      "id": "33772"
+    },
+    {
+      "type": "highlight",
+      "description": "`PsmPoolArchive` captures what an expired epoch left behind:\n- `raAccrued` / `paAccrued` / `ctAttributed` – final balances.\n- `rolloverClaims` – per-user mapping used by rollover flows.\n- `rolloverProfit` – total profit awaiting distribution.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 45,
+          "end": 53
+        }
+      ],
+      "title": "",
+      "id": "33773"
+    },
+    {
+      "type": "highlight",
+      "description": "`Balances` wraps `RedemptionAssetManager` for RA (principal + yield) and three plain counters for `dsBalance`, `paBalance` and `ctBalance`.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 58,
+          "end": 63
+        }
+      ],
+      "title": "",
+      "id": "33774"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultState` mirrors the `PSM` section for the `LV` strategy.\nImportant fields:\n- `balances` – see next slide.\n- `config` – pause flags + NAV breaker.\n- `lv` – metadata for the `ERC-4626` share token.\n- `lpLiquidated` – `BitMap` preventing double liquidation.\n- `pool` – nested withdrawal & AMM liquidity pools.\n- `initialized` – guards first-deposit logic.\n- `ctHeldPercentage` – strategy split of incoming RA.\n- `totalRaSnapshot` – per-epoch snapshot used by the **circuit-breaker**.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 107,
+          "end": 123
+        }
+      ],
+      "title": "",
+      "id": "33775"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultBalances` echoes the `PSM Balances` but replaces `ds/pa` counters with `lpBalance`, while keeping `ctBalance` for the `CT reserve`.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 68,
+          "end": 72
+        }
+      ],
+      "title": "",
+      "id": "33776"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultPool` nests two sub-pools plus a `withdrawEligible` map that tracks, per `address`, `CT` that has finished its cooldown.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 77,
+          "end": 82
+        }
+      ],
+      "title": "",
+      "id": "33777"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultWithdrawalPool` freezes exchange rates at expiry (88-90) and stores `RA/PA` that back `LV` share redemptions.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 87,
+          "end": 93
+        }
+      ],
+      "title": "",
+      "id": "33778"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultAmmLiquidityPool` is a single counter that accumulates surplus `RA`; `VaultLibrary` later pushes this into the `AMM` for the next `epoch`.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 100,
+          "end": 102
+        }
+      ],
+      "title": "",
+      "id": "33779"
+    },
+    {
+      "type": "highlight",
+      "description": "`VaultConfig` packs pause flags and a `NavCircuitBreaker` that alternates between `snapshot0/1`.  `VaultLibrary` updates these on deposits & withdrawals and blocks actions if **NAV** falls below `navThreshold`.",
+      "file": "contracts/libraries/State.sol",
+      "highlight": [
+        {
+          "start": 128,
+          "end": 140
+        }
+      ],
+      "title": "",
+      "id": "33780"
+    },
+    {
+      "type": "highlight",
+      "description": "`ctHeldPercentage` in action: `updateCtHeldPercentage()` (427-434) lets governance tune the strategy, while `_splitCt()` (436-439) applies that percentage to every deposit before minting `CT/DS` and adjusting balances.",
+      "file": "contracts/libraries/VaultLib.sol",
+      "highlight": [
+        {
+          "start": 427,
+          "end": 439
+        }
+      ],
+      "title": "",
+      "id": "33781"
+    },
+    {
+      "type": "textOnly",
+      "description": "All these nested structs live inside a single **State instance** per market, giving `PsmLibrary`, `VaultLibrary`, `Router` and `ModuleCore` one shared data source for deposits, repurchases, rollovers, AMM seeding, withdrawals and safety checks.",
+      "title": "",
+      "id": "33782"
+    }
+  ]
+}
